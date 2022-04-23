@@ -19,7 +19,6 @@ const Layout = ({ children, match, history }) => {
           Home
         </Link>
       </li>
-
       {!isAuth() && (
         <Fragment>
           <li className="nav-item">
@@ -43,12 +42,32 @@ const Layout = ({ children, match, history }) => {
         </Fragment>
       )}
 
-      {isAuth() && (
+      {/* {isAuth() && (
         <li className="nav-item">
           <span className="nav-link" style={{ color: "#fff" }}>
             {" "}
             {isAuth().firstName} {isAuth().lastName}
           </span>
+        </li>
+      )} */}
+
+      {/* Make the Name page clickable to redirect to their home pages. For Admin
+      admin.js and user private.js
+     */}
+
+      {isAuth() && isAuth().role === "admin" && (
+        <li className="nav-item">
+          <Link className="nav-link" to="/admin" style={isActive("/admin")}>
+            {isAuth().firstName} {isAuth().lastName}
+          </Link>
+        </li>
+      )}
+
+      {isAuth() && isAuth().role === "patient" && (
+        <li className="nav-item">
+          <Link className="nav-link" to="/private" style={isActive("/private")}>
+            {isAuth().firstName} {isAuth().lastName}
+          </Link>
         </li>
       )}
 

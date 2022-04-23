@@ -1,6 +1,7 @@
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 const { sendEmailWithNodemailer } = require("../helpers/email");
+const expressJWT = require("express-jwt");
 
 exports.signup = (req, res, next) => {
   const { firstName, lastName, email, password } = req.body;
@@ -109,6 +110,13 @@ exports.signin = (req, res, next) => {
     });
   });
 };
+
+exports.requireSignIn = expressJWT({
+  secret: process.env.JWT_SECRET, //  this will make the middleware verify the token and attach the user to the request object
+  // user data is available in token payload so we can use it in the middleware along with the request object
+  algorithms: ["HS256"],
+  // if the token is invalid, return error
+});
 
 // Future work
 // save all the emails in the database to keep track of them.

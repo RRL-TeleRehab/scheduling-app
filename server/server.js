@@ -18,6 +18,7 @@ mongoose
 
 // import routes
 const authRoutes = require("./routes/auth");
+const userRoutes = require("./routes/user");
 
 // Useful if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
 // It shows the real origin IP in the heroku or Cloudwatch logs
@@ -47,6 +48,7 @@ if (process.env.NODE_ENV === "development") {
 
 // middleware
 app.use("/api", authRoutes);
+app.use("/api", userRoutes);
 
 const port = process.env.PORT || 8000;
 app.listen(port, () => {

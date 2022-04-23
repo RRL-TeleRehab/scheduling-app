@@ -4,7 +4,7 @@ const appRoot = require("app-root-path");
 
 const logFormat = winston.format.combine(
   winston.format.colorize(),
-  winston.format.timestamp(),
+  winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
   winston.format.align(),
   winston.format.printf(({ level, message, timestamp }) => {
     return `${timestamp} ${level}: ${message}`;

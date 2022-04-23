@@ -6,7 +6,8 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.min.css";
 import { authenticate, isAuth } from "./helpers";
 
-const Signin = () => {
+// history prop comes from react-router-dom
+const Signin = ({ history }) => {
   const [values, setValues] = useState({
     email: "guntha@ualberta.ca",
     password: "Shmi97@hul!q",
@@ -38,6 +39,9 @@ const Signin = () => {
             buttonText: "Signing In",
           });
           toast.success(`${response.data.user.firstName} Welcome!`);
+          isAuth() && isAuth().role === "admin"
+            ? history.push("/admin")
+            : history.push("/private");
         });
       })
       .catch((error) => {
