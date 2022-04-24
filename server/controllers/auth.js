@@ -118,5 +118,26 @@ exports.requireSignIn = expressJWT({
   // if the token is invalid, return error
 });
 
+// Admin Middleware used only for routes that should be accessible by only admin users
+exports.adminMiddleware = (req, res, next) => {
+  User.findById({ _id: req.user._id }).exec((err, user) => {
+    if (err || !user) {
+      return res.status(400).json({
+        error: "User not found",
+      });
+    }
+
+    if (user.role !== "admin") {
+      return res.status(400).json({
+        error: "Admin resource. Access denied",
+      });
+    }
+    // this will profile to the request object so we can use it in the next middleware
+
+    req.profile = user;
+    next();
+  });
+};
+
 // Future work
 // save all the emails in the database to keep track of them.

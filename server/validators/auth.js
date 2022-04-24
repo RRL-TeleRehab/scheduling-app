@@ -23,7 +23,7 @@ exports.userSignupValidator = [
     .isLength({
       min: 8,
     })
-    .withMessage("Password must be at least 6 characters")
+    .withMessage("Password must be at least 8 characters")
     .isLength({
       max: 20,
     })
@@ -48,7 +48,7 @@ exports.userSignupValidator = [
     .isLength({
       min: 8,
     })
-    .withMessage("Password must be at least 6 characters")
+    .withMessage("Password must be at least 8 characters")
     .isLength({
       max: 20,
     })
@@ -78,14 +78,9 @@ exports.userSignInValidator = [
   check("password").not().isEmpty().withMessage("Password is required"),
 ];
 
-exports.userUpdateValidator = [
+exports.updateUserValidator = [
   check("password")
-    .not()
-    .isEmpty()
-    .withMessage("Password is required")
-    .isLength({
-      min: 8,
-    })
+    .isLength({ min: 8 })
     .withMessage("Password must be at least 6 characters")
     .isLength({
       max: 20,
@@ -102,15 +97,11 @@ exports.userUpdateValidator = [
     .withMessage("Password must contain at least one number")
     .not()
     .isAlpha()
-    .withMessage("Password must contain at least one special character"),
+    .withMessage("Password must contain at least one special character")
+    .optional({ nullable: true, checkFalsy: true }),
 
   check("confirmPassword")
-    .not()
-    .isEmpty()
-    .withMessage("Confirm Password is required")
-    .isLength({
-      min: 8,
-    })
+    .isLength({ min: 8 })
     .withMessage("Password must be at least 6 characters")
     .isLength({
       max: 20,
@@ -127,8 +118,8 @@ exports.userUpdateValidator = [
     .withMessage("Password must contain at least one number")
     .not()
     .isAlpha()
-    .withMessage("Password must contain at least one special character"),
-
+    .withMessage("Password must contain at least one special character")
+    .optional({ nullable: true, checkFalsy: true }),
   check("confirmPassword").custom((value, { req }) => {
     if (value !== req.body.password) {
       throw new Error("Passwords don't match");

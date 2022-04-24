@@ -5,7 +5,7 @@ import Signup from "./auth/Signup";
 import Signin from "./auth/Signin";
 import Activate from "./auth/Activate";
 import Private from "./core/Private";
-import Admin from "./auth/Admin";
+import Admin from "./core/Admin";
 import PrivateRoute from "./auth/PrivateRoute";
 import AdminRoute from "./auth/AdminRoute";
 

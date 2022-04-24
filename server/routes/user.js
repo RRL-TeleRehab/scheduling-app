@@ -3,9 +3,9 @@ const router = express.Router();
 
 //import controllers
 const { read, update } = require("../controllers/user");
-const { requireSignIn } = require("../controllers/auth");
+const { requireSignIn, adminMiddleware } = require("../controllers/auth");
 
-const { userUpdateValidator } = require("../validators/auth");
+const { updateUserValidator } = require("../validators/auth");
 
 // Run validations
 const { runValidation } = require("../validators/index");
@@ -14,7 +14,16 @@ router.get("/user/:id", requireSignIn, read);
 router.put(
   "/user/update",
   requireSignIn,
-  userUpdateValidator,
+  updateUserValidator,
+  runValidation,
+  update
+);
+
+router.put(
+  "/admin/update",
+  requireSignIn,
+  adminMiddleware,
+  updateUserValidator,
   runValidation,
   update
 );
