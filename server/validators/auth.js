@@ -127,3 +127,59 @@ exports.updateUserValidator = [
     return true;
   }),
 ];
+
+exports.forgotPasswordValidator = [
+  check("email")
+    .not()
+    .isEmpty()
+    .isEmail()
+    .withMessage("Must be valid email address"),
+];
+
+exports.resetPasswordValidator = [
+  check("newPassword")
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 6 characters")
+    .isLength({
+      max: 20,
+    })
+    .withMessage("Password can contain max 20 characters")
+    .not()
+    .isLowercase()
+    .withMessage("Password must contain at least one lowercase letter")
+    .not()
+    .isUppercase()
+    .withMessage("Password must contain at least one uppercase letter")
+    .not()
+    .isNumeric()
+    .withMessage("Password must contain at least one number")
+    .not()
+    .isAlpha()
+    .withMessage("Password must contain at least one special character")
+    .optional({ nullable: true, checkFalsy: true }),
+
+  check("confirmNewPassword")
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 6 characters")
+    .isLength({ max: 20 })
+    .withMessage("password can contain maximum 20 characters")
+    .not()
+    .isLowercase()
+    .withMessage("Password must contain at least one lowercase letter")
+    .not()
+    .isUppercase()
+    .withMessage("Password must contain at least one uppercase letter")
+    .not()
+    .isNumeric()
+    .withMessage("Password must contain at least one numeric character")
+    .not()
+    .isAlpha()
+    .withMessage("Password must contain at least one special character")
+    .optional({ nullable: true, checkFalsy: true }),
+  check("confirmNewPassword").custom((value, { req }) => {
+    if (value !== req.body.newPassword) {
+      throw new Error("Passwords don't match");
+    }
+    return true;
+  }),
+];
