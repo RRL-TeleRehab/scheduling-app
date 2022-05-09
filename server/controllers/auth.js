@@ -5,6 +5,15 @@ const expressJWT = require("express-jwt");
 
 exports.signup = (req, res, next) => {
   const { firstName, lastName, email, password } = req.body;
+
+  // check if the fields are empty
+  if (!firstName || !lastName || !email || !password) {
+    console.log("SIGNUP ERROR", err);
+    return res.status(400).json({
+      error: "All fields are required",
+    });
+  }
+
   // check if account already exists
   User.findOne({ email }).exec((err, user) => {
     if (user) {
@@ -32,7 +41,6 @@ exports.signup = (req, res, next) => {
         <p>${process.env.CLIENT_URL}/</p>
         `,
     };
-
     // send Email to the user
     sendEmailWithNodemailer(req, res, emailData);
   });

@@ -23,18 +23,10 @@ exports.update = (req, res, next) => {
         error: "User not found",
       });
     }
-    if (!firstName) {
-      return res.status(400).json({
-        error: "First name is required",
-      });
-    } else {
+    if (firstName) {
       user.firstName = firstName;
     }
-    if (!lastName) {
-      return res.status(400).json({
-        error: "Last name is required",
-      });
-    } else {
+    if (lastName) {
       user.lastName = lastName;
     }
 

@@ -6,7 +6,6 @@ Reg No
 Trained - where they are trained (Location)
 Professional Development courses
 Address
-Phone
-Email
+
 Socials
 Affiliation - where they are affiliated - Place of operation

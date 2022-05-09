@@ -51,6 +51,11 @@ const Signup = () => {
         toast.success(response.data.message);
       })
       .catch((error) => {
+        if (error.response.data.errors) {
+          console.log(error);
+          setValues({ ...values, buttonText: "Register" });
+          toast.error(error.response.data.errors);
+        }
         console.log(error);
         setValues({ ...values, buttonText: "Register" });
         toast.error(error.response.data.error);

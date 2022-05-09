@@ -4,13 +4,13 @@ exports.userSignupValidator = [
   check("firstName")
     .not()
     .isEmpty()
-    .withMessage("Name is required")
+    .withMessage("First Name is required")
     .isAlpha()
     .withMessage("Name must not contains numbers"),
   check("lastName")
     .not()
     .isEmpty()
-    .withMessage("Name is required")
+    .withMessage("Last Name is required")
     .isAlpha()
     .withMessage("Name must not contains numbers"),
 
