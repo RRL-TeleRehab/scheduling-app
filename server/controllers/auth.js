@@ -170,7 +170,7 @@ exports.forgotPassword = (req, res, next) => {
       html: `
         <p>Please use the following link to reset your password</p>
         <p>${process.env.CLIENT_URL}/auth/password/reset/${token}</p>
-        <hr />
+        <hr/>
         <p>This email may contain sensitive information</p>
         <p>${process.env.CLIENT_URL}/</p>
         `,
