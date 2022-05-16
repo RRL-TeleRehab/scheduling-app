@@ -1,0 +1,31 @@
+.user-signin-form{
+    margin-top: 10%;
+    background-color: #000000;
+    border-radius: 1.5rem 0rem 1.5rem 1.5rem;
+    padding: 1rem;
+}
+
+.signin-btn{
+    background-color: #00B5D7;
+}
+
+.user-signin-form-info{
+    display:flex;
+    align-items: center;
+    justify-content:center;
+}
+
+.user-signin-text{
+    color: #fff;
+    margin-bottom: 0 !important;
+    margin-top:0 !important;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+}
+
+.user-signin-logo{
+    width:40px;
+    height:40px;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+}

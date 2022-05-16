@@ -5,6 +5,8 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.min.css";
 import { isAuth } from "../auth/helpers";
+import logo from "../media/logo.svg";
+import "./styles/Signup.css";
 
 const Signup = () => {
   const [values, setValues] = useState({
@@ -16,14 +18,8 @@ const Signup = () => {
     buttonText: "Register",
   });
 
-  const {
-    firstName,
-    lastName,
-    email,
-    password,
-    confirmPassword,
-    buttonText,
-  } = values;
+  const { firstName, lastName, email, password, confirmPassword, buttonText } =
+    values;
 
   const handleChange = (name) => (event) => {
     setValues({ ...values, [name]: event.target.value });
@@ -64,7 +60,7 @@ const Signup = () => {
 
   const signupForm = () => (
     <form>
-      <div className="row mb-4">
+      <div className="row mt-4 mb-4 ">
         <div className="col">
           <div className="form-outline">
             <input
@@ -93,7 +89,7 @@ const Signup = () => {
           className="form-control"
           type="email"
           value={email}
-          placeholder="Email address"
+          placeholder="Email"
           onChange={handleChange("email")}
         ></input>
       </div>
@@ -123,7 +119,7 @@ const Signup = () => {
       </div>
       <button
         onClick={handleSubmit}
-        className="form-control btn btn-dark btn-block mb-4"
+        className="form-control signup-btn btn mb-2"
       >
         {buttonText}
       </button>
@@ -132,10 +128,13 @@ const Signup = () => {
 
   return (
     <Layout>
-      <div className="col-md-6 offset-md-3 mt-3">
+      <div className="user-signup-form col-md-4 offset-md-4">
         <ToastContainer></ToastContainer>
         {isAuth() ? <Redirect to="/" /> : null}
-        <h1>User Registration</h1>
+        <div className="user-signup-form-info">
+          <img src={logo} className="user-signup-logo" alt="PROMOTE"></img>
+          <h2 className="user-singup-text">Sign Up</h2>
+        </div>
         {signupForm()}
       </div>
     </Layout>

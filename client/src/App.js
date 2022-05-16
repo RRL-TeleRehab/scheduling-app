@@ -1,11 +1,12 @@
 import Layout from "./core/Layout";
-import React from "react";
+import React, { Fragment } from "react";
 
 const App = () => {
   return (
-    <Layout>
-      <h1>Hello</h1>
-    </Layout>
+    <Fragment>
+      <Layout></Layout>
+      <div style={{ marginTop: "100px" }}>This is the Landing Page</div>
+    </Fragment>
   );
 };
 export default App;

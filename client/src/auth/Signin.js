@@ -5,13 +5,15 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.min.css";
 import { authenticate, isAuth } from "./helpers";
+import logo from "../media/logo.svg";
+import "./styles/Signin.css";
 
 // history prop comes from react-router-dom
 const Signin = ({ history }) => {
   const [values, setValues] = useState({
     email: "guntha@ualberta.ca",
     password: "Shmi97@hul!q",
-    buttonText: "SignIn",
+    buttonText: "Login",
   });
 
   const { email, password, buttonText } = values;
@@ -53,31 +55,30 @@ const Signin = ({ history }) => {
 
   const signInForm = () => (
     <form>
-      <div className="form-outline mb-4">
+      <div className="form-outline mt-4 mb-4">
         <input
           className="form-control"
           type="email"
           value={email}
-          placeholder="Email address"
+          placeholder="Email"
           onChange={handleChange("email")}
         ></input>
       </div>
-      <div className="row mb-4">
-        <div className="col">
-          <div className="form-outline">
-            <input
-              type="password"
-              className="form-control"
-              placeholder="Password"
-              value={password}
-              onChange={handleChange("password")}
-            />
-          </div>
+
+      <div className="form-outline mb-4">
+        <div className="">
+          <input
+            type="password"
+            className="form-control"
+            placeholder="Password"
+            value={password}
+            onChange={handleChange("password")}
+          ></input>
         </div>
       </div>
       <button
         onClick={handleSubmit}
-        className="form-control btn btn-dark btn-block mb-4"
+        className="form-control btn signin-btn mb-2"
       >
         {buttonText}
       </button>
@@ -86,10 +87,13 @@ const Signin = ({ history }) => {
 
   return (
     <Layout>
-      <div className="col-md-6 offset-md-3 mt-3">
+      <div className="user-signin-form col-md-4 offset-md-4">
         <ToastContainer></ToastContainer>
         {isAuth() ? <Redirect to="/" /> : null}
-        <h1>User SignIn</h1>
+        <div className="user-signin-form-info">
+          <img src={logo} className="user-signin-logo" alt="PROMOTE"></img>
+          <h2 className="user-signin-text">Sign In</h2>
+        </div>
         {signInForm()}
       </div>
     </Layout>

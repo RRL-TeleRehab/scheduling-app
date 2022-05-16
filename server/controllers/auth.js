@@ -33,7 +33,7 @@ exports.signup = (req, res, next) => {
     const emailData = {
       from: process.env.EMAIL_FROM,
       to: email,
-      subject: `Account activation link`,
+      subject: `Thank you for choosing PROMOTE. Please find the account activation link`,
       html: `
         <p>Please use the following link to activate your account</p>
         <p>${process.env.CLIENT_URL}/auth/activate/${token}</p>
@@ -41,6 +41,7 @@ exports.signup = (req, res, next) => {
         <p>This email may contain sensitive information</p>
         <p>${process.env.CLIENT_URL}/</p>
         `,
+      html: emailBody,
     };
     // send Email to the user
     sendEmailWithNodemailer(req, res, emailData);
