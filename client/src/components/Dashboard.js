@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 import SideBarView from "./SideBarView";
 import NavBar from "./NavBar";
 
@@ -11,7 +11,17 @@ const Dashboard = () => {
         <div className="container-fluid ">
           <h1>Dashboard</h1>
           <p>
-            "Here all suspicion needs must be abandoned,
+            Here all suspicion needs must be abandoned, Here all suspicion needs
+            must be abandoned,Here all suspicion needs must be abandoned,Here
+            all suspicion needs must be abandoned,Here all suspicion needs must
+            be abandoned,Here all suspicion needs must be abandoned,Here all
+            suspicion needs must be abandoned,Here all suspicion needs must be
+            abandoned,Here all suspicion needs must be abandoned,Here all
+            suspicion needs must be abandoned,Here all suspicion needs must be
+            abandoned,Here all suspicion needs must be abandoned,Here all
+            suspicion needs must be abandoned,Here all suspicion needs must be
+            abandoned,Here all suspicion needs must be abandoned,Here all
+            suspicion needs must be abandoned,
             <br />
             All cowardice must needs be here extinct."
             <br />

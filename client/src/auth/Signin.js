@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { Fragment, useState } from "react";
 import { Link, Redirect } from "react-router-dom";
 import Layout from "../core/Layout";
 import axios from "axios";
@@ -11,15 +11,24 @@ import "./styles/Signin.css";
 // history prop comes from react-router-dom
 const Signin = ({ history }) => {
   const [values, setValues] = useState({
-    email: "guntha@ualberta.ca",
-    password: "Shmi97@hul!q",
+    email: "",
+    password: "",
     buttonText: "Login",
+    hover: false,
   });
 
-  const { email, password, buttonText } = values;
+  const { email, password, buttonText, hover } = values;
 
   const handleChange = (name) => (event) => {
     setValues({ ...values, [name]: event.target.value });
+  };
+
+  const handleMouseIn = () => {
+    setValues({ ...values, hover: true });
+  };
+
+  const handleMouseOut = () => {
+    setValues({ ...values, hover: false });
   };
 
   const handleSubmit = (event) => {
@@ -65,7 +74,7 @@ const Signin = ({ history }) => {
         ></input>
       </div>
 
-      <div className="form-outline mb-4">
+      <div className="form-outline mb-2">
         <div className="">
           <input
             type="password"
@@ -76,9 +85,22 @@ const Signin = ({ history }) => {
           ></input>
         </div>
       </div>
+      <div className="forgot-password-redirect mb-2 ml-2">
+        <p> Forgot Password?</p>
+        {"  "}
+        <Link
+          to="/auth/password/reset"
+          className="forgot-password-redirect-link"
+        >
+          Click here
+        </Link>
+      </div>
       <button
         onClick={handleSubmit}
-        className="form-control btn signin-btn mb-2"
+        className={`form-control btn mb-2
+          ${hover ? "signin-btn-hover" : "signin-btn"}`}
+        onMouseEnter={handleMouseIn}
+        onMouseLeave={handleMouseOut}
       >
         {buttonText}
       </button>
@@ -86,7 +108,9 @@ const Signin = ({ history }) => {
   );
 
   return (
-    <Layout>
+    <Fragment>
+      {/* <Layout></Layout> */}
+
       <div className="user-signin-form col-md-4 offset-md-4">
         <ToastContainer></ToastContainer>
         {isAuth() ? <Redirect to="/" /> : null}
@@ -95,8 +119,15 @@ const Signin = ({ history }) => {
           <h2 className="user-signin-text">Sign In</h2>
         </div>
         {signInForm()}
+        <div className="user-signup-redirect ml-2">
+          <p> Not a member yet? </p>
+          {"  "}
+          <Link to="/signup" className="user-signup-redirect-link">
+            Register
+          </Link>
+        </div>
       </div>
-    </Layout>
+    </Fragment>
   );
 };
 

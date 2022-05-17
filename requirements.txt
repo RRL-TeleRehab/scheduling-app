@@ -9,3 +9,6 @@ Address
 
 Socials
 Affiliation - where they are affiliated - Place of operation
+
+
+# Handle all the catch errors in UI forms

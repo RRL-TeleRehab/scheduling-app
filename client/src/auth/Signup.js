@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { Fragment, useState } from "react";
 import { Link, Redirect } from "react-router-dom";
 import Layout from "../core/Layout";
 import axios from "axios";
@@ -16,13 +16,29 @@ const Signup = () => {
     password: "",
     confirmPassword: "",
     buttonText: "Register",
+    hover: false,
   });
 
-  const { firstName, lastName, email, password, confirmPassword, buttonText } =
-    values;
+  const {
+    firstName,
+    lastName,
+    email,
+    password,
+    confirmPassword,
+    buttonText,
+    hover,
+  } = values;
 
   const handleChange = (name) => (event) => {
     setValues({ ...values, [name]: event.target.value });
+  };
+
+  const handleMouseIn = () => {
+    setValues({ ...values, hover: true });
+  };
+
+  const handleMouseOut = () => {
+    setValues({ ...values, hover: false });
   };
 
   const handleSubmit = (event) => {
@@ -119,7 +135,11 @@ const Signup = () => {
       </div>
       <button
         onClick={handleSubmit}
-        className="form-control signup-btn btn mb-2"
+        className={`form-control btn mb-2 ${
+          hover ? "signup-btn-hover" : "signup-btn"
+        }`}
+        onMouseEnter={handleMouseIn}
+        onMouseLeave={handleMouseOut}
       >
         {buttonText}
       </button>
@@ -127,7 +147,7 @@ const Signup = () => {
   );
 
   return (
-    <Layout>
+    <Fragment>
       <div className="user-signup-form col-md-4 offset-md-4">
         <ToastContainer></ToastContainer>
         {isAuth() ? <Redirect to="/" /> : null}
@@ -136,8 +156,15 @@ const Signup = () => {
           <h2 className="user-singup-text">Sign Up</h2>
         </div>
         {signupForm()}
+        <div className="user-signin-redirect ml-2">
+          <p> Already have an account? </p>
+          {"  "}
+          <Link to="/signin" className="user-signin-redirect-link">
+            Login
+          </Link>
+        </div>
       </div>
-    </Layout>
+    </Fragment>
   );
 };
 

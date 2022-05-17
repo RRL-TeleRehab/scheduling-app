@@ -8,6 +8,9 @@
 .signup-btn{
     background-color: #00B5D7;
 }
+.signup-btn-hover{
+    background-color: #0EB246;
+}
 
 .user-signup-form-info{
     display:flex;
@@ -28,4 +31,19 @@
     height:40px;
     margin-left: 0.5rem;
     margin-right: 0.5rem;
+}
+
+.user-signin-redirect{
+    display:flex;
+    color: #fff;
+    text-align: center;
+    margin-left: 2px;
+}
+
+.user-signin-redirect p{
+    margin:0 !important
+}
+.user-signin-redirect-link{
+    color: #00B5D7;
+    margin-left: 0.25rem;
 }

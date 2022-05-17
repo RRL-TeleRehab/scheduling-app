@@ -1,10 +1,10 @@
-.nav-style{
-    background-color: #000;    
-    position: fixed;
-    /* position:sticky; */
-    top: 0;
+.navbar{
+    background: transparent !important;
+    top: 0 !important;
     margin: 0 !important;
-    width: 100%;
+    width: 100% !important;
+    justify-content:flex-end;
+    display:flex;
 }
 
 .btn-login{
@@ -12,6 +12,7 @@
     color: #fff;
     margin-left: 10px;
     margin-right:10px;
+    width: 85px !important;
 }
 
 .btn-register{
@@ -19,6 +20,8 @@
     color: #fff;
     margin-left: 10px;
     margin-right: 10px;
+    width: 85px !important;
+
 }
 
 .btn-logout{
@@ -26,14 +29,10 @@
     color:"#000000";
     margin-left: 10px;
     margin-right: 10px;
+    width: 85px !important;
 }
 
 .username{
     margin-left: auto;
+    color: #0EB246
 }
-
-.custom{
-    width: 85px !important
-}
-
-
