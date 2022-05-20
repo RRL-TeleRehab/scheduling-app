@@ -12,6 +12,7 @@ import ForgotPassword from "./auth/ForgotPassword";
 import ResetPassword from "./auth/ResetPassword";
 import Dashboard from "./components/Dashboard";
 import Notification from "./components/Notification";
+import PageNotFound from "./components/PageNotFound";
 
 const Routes = () => {
   return (
@@ -36,6 +37,7 @@ const Routes = () => {
           exact
           component={ResetPassword}
         ></Route>
+        <Route path="*" exact component={PageNotFound}></Route>
       </Switch>
     </Router>
   );
