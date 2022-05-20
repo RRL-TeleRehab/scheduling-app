@@ -46,4 +46,10 @@
 .user-signin-redirect-link{
     color: #00B5D7;
     margin-left: 0.25rem;
+    font-weight: bold;
+}
+
+.signup-type-label{
+    color: #ffffff;
+    margin-left: 4px;
 }

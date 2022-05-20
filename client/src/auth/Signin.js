@@ -1,6 +1,5 @@
-import React, { Fragment, useState } from "react";
+import React, { useState } from "react";
 import { Link, Redirect } from "react-router-dom";
-import Layout from "../core/Layout";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.min.css";
@@ -108,26 +107,22 @@ const Signin = ({ history }) => {
   );
 
   return (
-    <Fragment>
-      {/* <Layout></Layout> */}
-
-      <div className="user-signin-form col-md-4 offset-md-4">
-        <ToastContainer></ToastContainer>
-        {isAuth() ? <Redirect to="/" /> : null}
-        <div className="user-signin-form-info">
-          <img src={logo} className="user-signin-logo" alt="PROMOTE"></img>
-          <h2 className="user-signin-text">Sign In</h2>
-        </div>
-        {signInForm()}
-        <div className="user-signup-redirect ml-2">
-          <p> Not a member yet? </p>
-          {"  "}
-          <Link to="/signup" className="user-signup-redirect-link">
-            Register
-          </Link>
-        </div>
+    <div className="user-signin-form col-md-4 offset-md-4">
+      <ToastContainer></ToastContainer>
+      {isAuth() ? <Redirect to="/" /> : null}
+      <div className="user-signin-form-info">
+        <img src={logo} className="user-signin-logo" alt="PROMOTE"></img>
+        <h2 className="user-signin-text">Sign In</h2>
       </div>
-    </Fragment>
+      {signInForm()}
+      <div className="user-signup-redirect ml-2">
+        <p> Not a member yet? </p>
+        {"  "}
+        <Link to="/signup" className="user-signup-redirect-link">
+          Register
+        </Link>
+      </div>
+    </div>
   );
 };
 

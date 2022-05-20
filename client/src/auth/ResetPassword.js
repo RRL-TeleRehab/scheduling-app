@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import Layout from "../core/Layout";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.min.css";
 import "./styles/ResetPassword.css";
@@ -66,7 +66,7 @@ const ResetPassword = ({ match }) => {
 
       <button
         onClick={handleSubmit}
-        className={`form-control btn ${
+        className={`form-control btn mb-2 ${
           hover ? "reset-password-btn-hover" : "reset-password-btn"
         }`}
         onMouseEnter={handleMouseIn}
@@ -94,6 +94,13 @@ const ResetPassword = ({ match }) => {
         reset your password
       </h6>
       {resetPasswordForm()}
+      <div className="user-signin-redirect ml-2">
+        <p> Go Back </p>
+        {"  "}
+        <Link to="/signin" className="user-signin-redirect-link">
+          Login
+        </Link>
+      </div>
     </div>
   );
 };

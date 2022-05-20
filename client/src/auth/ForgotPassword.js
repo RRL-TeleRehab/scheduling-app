@@ -1,21 +1,32 @@
-import React, { useState } from "react";
-import Layout from "../core/Layout";
+import React, { Fragment, useState } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.min.css";
+import "./styles/ForgotPassword.css";
+import logo from "../media/logo.svg";
+import { Link } from "react-router-dom";
 
 // history prop comes from react-router-dom
 const ForgotPassword = ({ history }) => {
   const [values, setValues] = useState({
     newPassword: "",
     confirmNewPassword: "",
-    buttonText: "Update Password",
+    buttonText: "Confirm",
+    hover: false,
   });
 
-  const { newPassword, confirmNewPassword, buttonText } = values;
+  const { newPassword, confirmNewPassword, buttonText, hover } = values;
 
   const handleChange = (name) => (event) => {
     setValues({ ...values, [name]: event.target.value });
+  };
+
+  const handleMouseIn = () => {
+    setValues({ ...values, hover: true });
+  };
+
+  const handleMouseOut = () => {
+    setValues({ ...values, hover: false });
   };
 
   const handleSubmit = (event) => {
@@ -44,7 +55,7 @@ const ForgotPassword = ({ history }) => {
 
   const forgotPasswordForm = () => (
     <form>
-      <div className="row mb-4">
+      <div className="row mt-4 mb-4">
         <div className="col">
           <div className="form-outline">
             <input
@@ -70,7 +81,11 @@ const ForgotPassword = ({ history }) => {
       </div>
       <button
         onClick={handleSubmit}
-        className="form-control btn btn-dark btn-block mb-4"
+        className={`form-control btn mb-2 ${
+          hover ? "forgot-password-btn-hover" : "forgot-password-btn"
+        }`}
+        onMouseEnter={handleMouseIn}
+        onMouseLeave={handleMouseOut}
       >
         {buttonText}
       </button>
@@ -78,13 +93,25 @@ const ForgotPassword = ({ history }) => {
   );
 
   return (
-    <Layout>
-      <div className="col-md-6 offset-md-3 mt-3">
-        <ToastContainer></ToastContainer>
-        <h1>Forgot Password</h1>
-        {forgotPasswordForm()}
+    <div className="forgot-password-form col-md-4 offset-md-4">
+      <ToastContainer></ToastContainer>
+      <div className="forgot-password-form-info">
+        <img
+          src={logo}
+          alt="promote"
+          className="forgot-password-form-logo"
+        ></img>
+        <h2 className="forgot-password-form-heading">Reset Password</h2>
       </div>
-    </Layout>
+      {forgotPasswordForm()}
+      <div className="user-signin-redirect ml-2">
+        <p> Go Back </p>
+        {"  "}
+        <Link to="/signin" className="user-signin-redirect-link">
+          Login
+        </Link>
+      </div>
+    </div>
   );
 };
 

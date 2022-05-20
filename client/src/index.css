@@ -1,6 +1,6 @@
 .navbar {
     height: 50px;
-    background: #000;
+    background: grey;
   }
   
   .sidebar-item.active{
@@ -24,7 +24,7 @@
   /* critical-point */
   .main-navbar {
     position: fixed;
-    background: #000;
+    background: grey;
     width: 88%;
     padding-top:1px;
     color:#fff
@@ -69,7 +69,7 @@
     height: 100%;
     margin-left: -230px;
     overflow-y: auto;
-    background: grey;
+    background: #fff;
     -webkit-transition: all 0.5s ease;
     -moz-transition: all 0.5s ease;
     -o-transition: all 0.5s ease;
@@ -135,15 +135,15 @@
   
   /*critical point*/
   .sidebar-nav>.sidebar-brand {
-    height: 55px;
-    background: #000;
+    height: 51px;
+    background: #00B5D7;
   }
 
   .app-logo-brand{
     padding: 1px;
   }
   .app-logo-brand-img{
-    height: 50px;
+    height: 45px;
     width:225px;
     margin: 2px;
     display: flex;

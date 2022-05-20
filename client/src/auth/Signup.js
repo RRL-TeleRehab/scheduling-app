@@ -1,6 +1,5 @@
-import React, { Fragment, useState } from "react";
+import React, { useState } from "react";
 import { Link, Redirect } from "react-router-dom";
-import Layout from "../core/Layout";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.min.css";
@@ -76,7 +75,35 @@ const Signup = () => {
 
   const signupForm = () => (
     <form>
-      <div className="row mt-4 mb-4 ">
+      <div className="row mt-4 mb-4">
+        <div className="col">
+          <div className="form-outline">
+            <input
+              type="radio"
+              className="form-check-input"
+              value="option1"
+              name="signup-type"
+            />
+            <label class="form-check-label signup-type-label">
+              Spoke Clinician
+            </label>
+          </div>
+        </div>
+        <div className="col">
+          <div className="form-outline">
+            <input
+              type="radio"
+              className="form-check-input"
+              value="option1"
+              name="signup-type"
+            />
+            <label class="form-check-label signup-type-label">
+              Hub Clinician
+            </label>
+          </div>
+        </div>
+      </div>
+      <div className="row mb-4 ">
         <div className="col">
           <div className="form-outline">
             <input
@@ -147,24 +174,22 @@ const Signup = () => {
   );
 
   return (
-    <Fragment>
-      <div className="user-signup-form col-md-4 offset-md-4">
-        <ToastContainer></ToastContainer>
-        {isAuth() ? <Redirect to="/" /> : null}
-        <div className="user-signup-form-info">
-          <img src={logo} className="user-signup-logo" alt="PROMOTE"></img>
-          <h2 className="user-singup-text">Sign Up</h2>
-        </div>
-        {signupForm()}
-        <div className="user-signin-redirect ml-2">
-          <p> Already have an account? </p>
-          {"  "}
-          <Link to="/signin" className="user-signin-redirect-link">
-            Login
-          </Link>
-        </div>
+    <div className="user-signup-form col-md-4 offset-md-4">
+      <ToastContainer></ToastContainer>
+      {isAuth() ? <Redirect to="/" /> : null}
+      <div className="user-signup-form-info">
+        <img src={logo} className="user-signup-logo" alt="PROMOTE"></img>
+        <h2 className="user-singup-text">Sign Up</h2>
       </div>
-    </Fragment>
+      {signupForm()}
+      <div className="user-signin-redirect ml-2">
+        <p> Already have an account? </p>
+        {"  "}
+        <Link to="/signin" className="user-signin-redirect-link">
+          Login
+        </Link>
+      </div>
+    </div>
   );
 };
 
