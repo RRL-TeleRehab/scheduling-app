@@ -73,3 +73,31 @@ Affiliation - where they are affiliated - Place of operation
     #     </div>
     #   </div>
     # </Fragment>
+
+
+    // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyAmgp9mxG1pULtI5kbNPTunhWXF-0PXo9M",
+  authDomain: "promote-b3a12.firebaseapp.com",
+  projectId: "promote-b3a12",
+  storageBucket: "promote-b3a12.appspot.com",
+  messagingSenderId: "714156959551",
+  appId: "1:714156959551:web:8b75587eee8755e492558a",
+  measurementId: "G-1BZDJX5BN8"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
+
+
+
+gs://promote-b3a12.appspot.com

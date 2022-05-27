@@ -5,20 +5,30 @@ import axios from "axios";
 import { getCookie } from "../../auth/helpers";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.min.css";
+import storage from "../../firebase";
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 
 const NewStory = ({ history }) => {
+  const allInputs = { imgUrl: "" };
   const [values, setValues] = useState({
     storyTitle: "",
     storyHeading: "",
     storyContent: "",
     storyLink: "",
   });
+  const [imageAsFile, setImageAsFile] = useState("");
+  const [imageAsUrl, setImageAsUrl] = useState(allInputs);
 
   const { storyTitle, storyHeading, storyContent, storyLink } = values;
   const token = getCookie("token");
 
   const handleChange = (name) => (event) => {
     setValues({ ...values, [name]: event.target.value });
+  };
+
+  const handleImageAsFile = (event) => {
+    const image = event.target.files[0];
+    setImageAsFile((imageFile) => image);
   };
 
   const handleSubmit = (event) => {
@@ -44,6 +54,35 @@ const NewStory = ({ history }) => {
       .catch((error) => {
         console.log("Stories ERROR", error);
       });
+  };
+
+  const handleFirebaseUpload = (event) => {
+    event.preventDefault();
+    console.log("start of upload");
+    if (imageAsFile === "") {
+      console.error(`not an image, the image file is a ${typeof imageAsFile}`);
+    }
+    console.log("Image file name", imageAsFile.name);
+
+    const storageRef = ref(storage, `/storyImages/${imageAsFile.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, imageAsFile);
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        console.log(snapshot);
+      },
+      (error) => {
+        console.log(error);
+      },
+      () => {
+        getDownloadURL(uploadTask.snapshot.ref).then((url) => {
+          setImageAsUrl((prevObject) => ({
+            ...prevObject,
+            imgUrl: url,
+          }));
+        });
+      }
+    );
   };
 
   return (
@@ -98,6 +137,14 @@ const NewStory = ({ history }) => {
             <button onClick={handleSubmit} className={`btn btn-primary`}>
               Submit
             </button>
+          </form>
+          <form>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageAsFile}
+            ></input>
+            <button onClick={handleFirebaseUpload}>Upload Image</button>
           </form>
         </div>
       </div>
