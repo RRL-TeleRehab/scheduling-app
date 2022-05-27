@@ -50,8 +50,8 @@ const Signin = ({ history }) => {
           });
           toast.success(`${response.data.user.firstName} Welcome!`);
           isAuth() && isAuth().role === "admin"
-            ? history.push("/admin")
-            : history.push("/private");
+            ? history.push("/profile")
+            : history.push("/profile");
         });
       })
       .catch((error) => {

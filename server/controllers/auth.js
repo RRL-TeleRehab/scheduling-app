@@ -5,10 +5,10 @@ const expressJWT = require("express-jwt");
 const _ = require("lodash");
 
 exports.signup = (req, res, next) => {
-  const { firstName, lastName, email, password } = req.body;
+  const { firstName, lastName, email, password, role } = req.body;
 
   // check if the fields are empty
-  if (!firstName || !lastName || !email || !password) {
+  if (!firstName || !lastName || !email || !password || !role) {
     console.log("SIGNUP ERROR", err);
     return res.status(400).json({
       error: "All fields are required",
@@ -24,7 +24,7 @@ exports.signup = (req, res, next) => {
     }
     // generate JWT Token
     const token = jwt.sign(
-      { firstName, lastName, email, password },
+      { firstName, lastName, email, password, role },
       process.env.JWT_ACCOUNT_ACTIVATION,
       { expiresIn: "15m" }
     );
@@ -41,7 +41,6 @@ exports.signup = (req, res, next) => {
         <p>This email may contain sensitive information</p>
         <p>${process.env.CLIENT_URL}/</p>
         `,
-      html: emailBody,
     };
     // send Email to the user
     sendEmailWithNodemailer(req, res, emailData);
@@ -63,12 +62,14 @@ exports.accountActivation = (req, res, next) => {
             error: "Expired link. Signup again",
           });
         }
-        const { firstName, lastName, email, password } = jwt.decode(token);
+        const { firstName, lastName, email, password, role } =
+          jwt.decode(token);
         const user = new User({
           firstName,
           lastName,
           email,
           password,
+          role,
         });
         // if token is correct and verifies, save the user record in the database
         user.save((err, user) => {
@@ -142,8 +143,46 @@ exports.adminMiddleware = (req, res, next) => {
         error: "Admin resource. Access denied",
       });
     }
-    // this will profile to the request object so we can use it in the next middleware
+    // this will add profile to the request object so we can use it in the next middleware
+    req.profile = user;
+    next();
+  });
+};
 
+// Spoke Clinician Middleware used only for the routes that should be accessible by only Spoke Clinician users.
+exports.spokeClinicianMiddleware = (req, res, next) => {
+  User.findById({ _id: req.user._id }).exec((err, user) => {
+    if (err || !user) {
+      return res.status(400).json({
+        error: "User not found",
+      });
+    }
+
+    if (user.role !== "spoke") {
+      return res.status(400).json({
+        error: "Resource access denied",
+      });
+    }
+    req.profile = user;
+    next();
+  });
+};
+
+// Hub Clinician Middleware used only for the routes that should be accessible by only Hub Clinician users.
+
+exports.hubClinicianMiddleware = (req, res, next) => {
+  User.findById({ _id: req.user._id }).exec((err, user) => {
+    if (err || !user) {
+      return res.status(400).json({
+        error: "User not found",
+      });
+    }
+
+    if (user.role !== "hub") {
+      return res.status(400).json({
+        error: "Resource access denied",
+      });
+    }
     req.profile = user;
     next();
   });

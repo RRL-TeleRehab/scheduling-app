@@ -9,7 +9,7 @@ require("dotenv").config();
 
 const app = express();
 mongoose
-  .connect(process.env.MONGO_URI, {
+  .connect(process.env.MONGO_ATLAS_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: false,
   })
@@ -19,6 +19,7 @@ mongoose
 // import routes
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
+const storyRoutes = require("./routes/story");
 
 // Useful if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
 // It shows the real origin IP in the heroku or Cloudwatch logs
@@ -49,6 +50,7 @@ if (process.env.NODE_ENV === "development") {
 // middleware
 app.use("/api", authRoutes);
 app.use("/api", userRoutes);
+app.use("/api", storyRoutes);
 
 const port = process.env.PORT || 8000;
 app.listen(port, () => {

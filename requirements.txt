@@ -12,3 +12,64 @@ Affiliation - where they are affiliated - Place of operation
 
 
 # Handle all the catch errors in UI forms
+# Redirect from account activate page after sucessful account activation 
+
+
+
+# Backend Email template
+
+    # <Fragment>
+    #   <div className="row">
+    #     <Layout></Layout>
+    #   </div>
+    #   <div className="row">
+    #     <div className="col-6 offset-1 mt-3">
+    #       <ToastContainer></ToastContainer>
+    #       <h1 className="pt-5 text-center"> Update Profile</h1>
+    #       {updateForm()}
+    #       <div style={{ border: "1px #000 solid" }}>
+    #         <div
+    #           style={{
+    #             textAlign: "center",
+    #             backgroundColor: "gray",
+    #             clipPath: "polygon(100vmax 100vmax, 0% 0%, 100% 0%, 100% 100%)",
+    #             margin: "auto",
+    #           }}
+    #         >
+    #           <img
+    #             src={logo}
+    #             style={{
+    #               width: "200px",
+    #               margin: "4px",
+    #             }}
+    #           ></img>
+    #         </div>
+    #         <div
+    #           style={{
+    #             textAlign: "center",
+    #             margin: "4px",
+    #           }}
+    #         >
+    #           Thank you for choosing promote
+    #         </div>
+    #         <hr style={{ border: "1px solid gray", margin: "4px" }}></hr>
+    #         <p style={{ margin: "20px 8px 20px 8px" }}>
+    #           You are only a few steps away from joining a growing network for
+    #           clinicians.
+    #         </p>
+    #         <p style={{ margin: "20px 8px 20px 8px" }}>
+    #           Promote is designed to help expand our opportunities for
+    #           collaboration on virtual diagnosis of your patients with the help
+    #           of hub support.
+    #         </p>
+    #         <p style={{ margin: "20px 8px 20px 8px" }}>
+    #           To begin your journey with us, please use the link below to
+    #           complete your account setup!
+    #         </p>
+    #         <p style={{ margin: "20px 8px 20px 8px" }}> URL</p>
+    #         <p style={{ margin: "20px 8px 20px 8px" }}>Sincerely,</p>
+    #         <p style={{ margin: "20px 8px 20px 8px" }}>The Promote Team</p>
+    #       </div>
+    #     </div>
+    #   </div>
+    # </Fragment>

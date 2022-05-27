@@ -38,7 +38,6 @@ const userSchema = new mongoose.Schema(
       data: Buffer,
       contentType: String,
     },
-
     hashed_password: {
       type: String,
       required: true,
@@ -48,7 +47,8 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      default: "patient",
+      default: "spoke",
+      enum: ["spoke", "hub", "admin"],
     },
     resetPasswordLink: {
       data: String,

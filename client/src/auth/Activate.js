@@ -60,12 +60,10 @@ const Activate = ({ match }) => {
   );
 
   return (
-    <Layout>
-      <div className="col-md-6 offset-md-3 mt-3">
-        <ToastContainer></ToastContainer>
-        {activationLink()}
-      </div>
-    </Layout>
+    <div className="col-md-6 offset-md-3 mt-3">
+      <ToastContainer></ToastContainer>
+      {activationLink()}
+    </div>
   );
 };
 

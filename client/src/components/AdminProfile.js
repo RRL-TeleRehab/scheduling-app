@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import SideBarView from "./SideBarView";
+import NavBar from "./NavBar";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.min.css";
 import { isAuth, getCookie, signout, updateUserInfo } from "../auth/helpers";
 
-const Private = ({ history }) => {
+const AdminProfile = ({ history }) => {
   const [values, setValues] = useState({
     firstName: "",
     lastName: "",
@@ -40,7 +42,7 @@ const Private = ({ history }) => {
       },
     })
       .then((response) => {
-        console.log("PRIVATE PROFILE", response);
+        // console.log("PRIVATE PROFILE", response);
         const { firstName, lastName, email, role } = response.data;
         setValues({ ...values, firstName, lastName, email, role });
       })
@@ -64,7 +66,7 @@ const Private = ({ history }) => {
     setValues({ ...values, buttonText: "Updating" });
     axios({
       method: "PUT",
-      url: `${process.env.REACT_APP_API}/user/update`,
+      url: `${process.env.REACT_APP_API}/admin/update`,
       data: { firstName, lastName, password, confirmPassword },
       headers: {
         Authorization: `Bearer ${token}`,
@@ -92,11 +94,10 @@ const Private = ({ history }) => {
     <form>
       <div className="row mb-4">
         <div className="col-3">
-          <label>Account Type:</label>
+          <label>Profile Type:</label>
         </div>
         <div className="col">
           <label>{role.toUpperCase()}</label>
-          {/* <input type="text" className="form-control" value={role} /> */}
         </div>
       </div>
       <div className="row mb-4">
@@ -165,12 +166,18 @@ const Private = ({ history }) => {
   );
 
   return (
-    <div className="col-md-6 offset-md-3 mt-3">
-      <ToastContainer></ToastContainer>
-      <h1 className="pt-5 text-center"> Update Profile</h1>
-      {updateForm()}
+    <div id="wrapper" className="toggled">
+      <SideBarView selected="/" />
+      <div id="page-content-wrapper " className="">
+        <NavBar />
+        <div className="container-fluid col-md-6 offset-md-3">
+          <ToastContainer></ToastContainer>
+          <h1 className="pt-5 text-center"> Admin Profile Update</h1>
+          {updateForm()}
+        </div>
+      </div>
     </div>
   );
 };
 
-export default Private;
+export default AdminProfile;

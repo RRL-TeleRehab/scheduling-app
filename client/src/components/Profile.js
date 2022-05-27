@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
+import SideBarView from "./SideBarView";
+import NavBar from "./NavBar";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.min.css";
 import { isAuth, getCookie, signout, updateUserInfo } from "../auth/helpers";
 
-const Private = ({ history }) => {
+const Profile = ({ history }) => {
   const [values, setValues] = useState({
     firstName: "",
     lastName: "",
@@ -165,12 +167,18 @@ const Private = ({ history }) => {
   );
 
   return (
-    <div className="col-md-6 offset-md-3 mt-3">
-      <ToastContainer></ToastContainer>
-      <h1 className="pt-5 text-center"> Update Profile</h1>
-      {updateForm()}
+    <div id="wrapper" className="toggled">
+      <SideBarView selected="/" />
+      <div id="page-content-wrapper " className="">
+        <NavBar />
+        <div className="container-fluid col-md-8 offset-md-2">
+          <ToastContainer></ToastContainer>
+          <h1> Profile</h1>
+          {updateForm()}
+        </div>
+      </div>
     </div>
   );
 };
 
-export default Private;
+export default Profile;

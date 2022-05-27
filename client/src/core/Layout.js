@@ -47,7 +47,7 @@ const Layout = ({ children, match, history }) => {
           </Link>
         )}
 
-        {isAuth() && isAuth().role === "patient" && (
+        {isAuth() && (isAuth().role === "hub" || isAuth().role === "spoke") && (
           <Link
             className="nav-link username"
             to="/private"

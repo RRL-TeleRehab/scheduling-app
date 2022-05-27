@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import SideBarItem from "./SideBarItem";
 import appLogo from "../media/logo3.svg";
+import { isAuth } from "../auth/helpers";
 
 const SideBarView = ({ selected }) => {
   return (
@@ -17,8 +18,8 @@ const SideBarView = ({ selected }) => {
           </Link>
         </li>
         <SideBarItem
-          link="/dashboard"
-          title="Dashboard"
+          link="/profile"
+          title="Profile"
           faIcon="fas fa-chart-bar"
           selected={selected}
         />
@@ -28,6 +29,14 @@ const SideBarView = ({ selected }) => {
           faIcon="fas fa-home"
           selected={selected}
         />
+        {isAuth() && isAuth().role === "admin" && (
+          <SideBarItem
+            link="/admin/stories"
+            title="Story"
+            faIcon="fas fa-book"
+            selected={selected}
+          ></SideBarItem>
+        )}
       </ul>
     </div>
   );

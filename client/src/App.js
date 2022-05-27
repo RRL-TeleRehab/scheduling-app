@@ -26,7 +26,7 @@ const App = ({ match, history }) => {
         </div>
       )}
 
-      {isAuth() && isAuth().role === "patient" && (
+      {isAuth() && (isAuth().role === "spoke" || isAuth().role === "hub") && (
         <div className="username">
           {isAuth().firstName} {isAuth().lastName}
         </div>

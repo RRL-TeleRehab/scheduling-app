@@ -11,7 +11,7 @@ const NavBarMenuWrapper = () => {
         </div>
       )}
 
-      {isAuth() && isAuth().role === "patient" && (
+      {isAuth() && (isAuth().role === "hub" || isAuth().role === "spoke") && (
         <div className="username">
           {isAuth().firstName} {isAuth().lastName}
         </div>
