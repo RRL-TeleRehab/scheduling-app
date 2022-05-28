@@ -21,12 +21,14 @@ exports.getStory = (req, res, next) => {
 };
 
 exports.createStory = (req, res, next) => {
-  const { storyTitle, storyHeading, storyContent, storyLink } = req.body;
+  const { storyTitle, storyHeading, storyContent, storyLink, storyImageUrl } =
+    req.body;
   const story = new Story({
     title: storyTitle,
     heading: storyHeading,
     content: storyContent,
     link: storyLink,
+    coverPhoto: storyImageUrl,
   });
   story.save((err, data) => {
     if (err) {
@@ -40,7 +42,8 @@ exports.createStory = (req, res, next) => {
 
 exports.updateStory = (req, res, next) => {
   const storyId = req.params.storyId;
-  const { storyTitle, storyHeading, storyContent, storyLink } = req.body;
+  const { storyTitle, storyHeading, storyContent, storyLink, storyImageAsUrl } =
+    req.body;
 
   Story.findByIdAndUpdate(
     { _id: storyId },
@@ -50,6 +53,7 @@ exports.updateStory = (req, res, next) => {
         heading: storyHeading,
         content: storyContent,
         link: storyLink,
+        coverPhoto: storyImageAsUrl,
       },
     },
     { new: true }

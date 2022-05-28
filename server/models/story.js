@@ -19,8 +19,7 @@ const storySchema = new mongoose.Schema(
       type: String,
     },
     coverPhoto: {
-      data: Buffer,
-      contentType: String,
+      type: String,
     },
   },
   { timestamps: true }

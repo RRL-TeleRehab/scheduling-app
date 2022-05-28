@@ -33,11 +33,18 @@ const NewStory = ({ history }) => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    const storyImageUrl = imageAsUrl.imgUrl;
     axios({
       method: "POST",
       url: `${process.env.REACT_APP_API}/admin/story`,
       headers: { Authorization: `Bearer ${token}` },
-      data: { storyTitle, storyHeading, storyContent, storyLink },
+      data: {
+        storyTitle,
+        storyHeading,
+        storyContent,
+        storyLink,
+        storyImageUrl,
+      },
     })
       .then((response) => {
         setValues({
@@ -62,7 +69,7 @@ const NewStory = ({ history }) => {
     if (imageAsFile === "") {
       console.error(`not an image, the image file is a ${typeof imageAsFile}`);
     }
-    console.log("Image file name", imageAsFile.name);
+    // console.log("Image file name", imageAsFile.name);
 
     const storageRef = ref(storage, `/storyImages/${imageAsFile.name}`);
     const uploadTask = uploadBytesResumable(storageRef, imageAsFile);
@@ -93,6 +100,18 @@ const NewStory = ({ history }) => {
         <div className="container-fluid">
           <ToastContainer></ToastContainer>
           <p>New Story</p>
+          <form>
+            <div className="form-outline mb-4">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageAsFile}
+              ></input>
+            </div>
+            <button className="btn btn-primary" onClick={handleFirebaseUpload}>
+              Upload Image
+            </button>
+          </form>
           <form>
             <div className="form-outline mb-4">
               <input
@@ -138,16 +157,9 @@ const NewStory = ({ history }) => {
               Submit
             </button>
           </form>
-          <form>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageAsFile}
-            ></input>
-            <button onClick={handleFirebaseUpload}>Upload Image</button>
-          </form>
         </div>
       </div>
+      {JSON.stringify(imageAsUrl.imgUrl)}
     </div>
   );
 };
