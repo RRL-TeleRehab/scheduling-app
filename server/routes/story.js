@@ -15,6 +15,7 @@ const { requireSignIn, adminMiddleware } = require("../controllers/auth");
 const { storyValidator } = require("../validators/story");
 const { runValidation } = require("../validators/index");
 
+// routes
 router.get("/story", getAllStories);
 router.get("/story/:storyId", getStory);
 router.post(

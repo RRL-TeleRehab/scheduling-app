@@ -1,5 +1,8 @@
 const Story = require("../models/story");
 
+// @description :  Get list of all stories
+// @route GET /api/story
+// @access public
 exports.getAllStories = (req, res, next) => {
   Story.find().exec((err, stories) => {
     if (err || !stories) {

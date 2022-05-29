@@ -20,6 +20,7 @@ mongoose
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
 const storyRoutes = require("./routes/story");
+const availabilityRoutes = require("./routes/availability");
 
 // Useful if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
 // It shows the real origin IP in the heroku or Cloudwatch logs
@@ -51,8 +52,10 @@ if (process.env.NODE_ENV === "development") {
 app.use("/api", authRoutes);
 app.use("/api", userRoutes);
 app.use("/api", storyRoutes);
+app.use("/api", availabilityRoutes);
 
 const port = process.env.PORT || 8000;
 app.listen(port, () => {
   console.log(`Server is running on port ${port} - ${process.env.NODE_ENV}`);
+  console.log(new Date());
 });

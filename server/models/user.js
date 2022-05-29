@@ -35,8 +35,9 @@ const userSchema = new mongoose.Schema(
       max: 160,
     },
     photo: {
-      data: Buffer,
-      contentType: String,
+      type: String,
+      required: false,
+      trim: true,
     },
     hashed_password: {
       type: String,
@@ -53,6 +54,24 @@ const userSchema = new mongoose.Schema(
     resetPasswordLink: {
       data: String,
       default: "",
+    },
+    social: {
+      facebook: {
+        type: String,
+        required: false,
+      },
+      twitter: {
+        type: String,
+        required: false,
+      },
+      linkedin: {
+        type: String,
+        required: false,
+      },
+      instagram: {
+        type: String,
+        required: false,
+      },
     },
   },
   { timestamps: true }
