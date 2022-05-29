@@ -188,6 +188,19 @@ exports.hubClinicianMiddleware = (req, res, next) => {
   });
 };
 
+// Open Access Middleware used only for the routes that should be accessible all the user roles.
+exports.userMiddleware = (req, res, next) => {
+  User.findById({ _id: req.user._id }).exec((err, user) => {
+    if (err || !user) {
+      return res.status(400).json({
+        error: "User not found",
+      });
+    }
+    req.profile = user;
+    next();
+  });
+};
+
 // function for forgot password where user provides an email address to send reset link to email address.
 exports.forgotPassword = (req, res, next) => {
   const { email } = req.body;
