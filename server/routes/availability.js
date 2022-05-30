@@ -4,7 +4,6 @@ const router = express.Router();
 //import controllers
 const {
   createAvailability,
-  getAvailability,
   getClinicianAvailability,
 } = require("../controllers/availability");
 
@@ -28,5 +27,4 @@ router.get(
   userMiddleware,
   getClinicianAvailability
 );
-router.get("/availability", requireSignIn, userMiddleware, getAvailability);
 module.exports = router;

@@ -37,6 +37,14 @@ const SideBarView = ({ selected }) => {
             selected={selected}
           ></SideBarItem>
         )}
+        {isAuth() && isAuth().role === "hub" && (
+          <SideBarItem
+            link="/availability"
+            title="Availability"
+            faIcon="fas fa-book"
+            selected={selected}
+          ></SideBarItem>
+        )}
       </ul>
     </div>
   );

@@ -15,6 +15,7 @@ import AdminProfile from "./components/AdminProfile";
 import Stories from "./components/adminComponents/Stories";
 import NewStory from "./components/adminComponents/NewStory";
 import UpdateStory from "./components/adminComponents/UpdateStory";
+import Availability from "./components/Availability";
 
 const Routes = () => {
   return (
@@ -46,6 +47,11 @@ const Routes = () => {
           exact
           component={UpdateStory}
         ></AdminRoute>
+        <PrivateRoute
+          path="/availability"
+          exact
+          component={Availability}
+        ></PrivateRoute>
         <Route
           path="/auth/password/forgot"
           exact
