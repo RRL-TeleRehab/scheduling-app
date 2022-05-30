@@ -4,22 +4,37 @@ import NavBar from "./NavBar";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Slots from "./Slots";
+import { getCookie, isAuth } from "../auth/helpers.js";
+import axios from "axios";
 
 const Availability = () => {
   const [appointmentDate, setAppointmentDate] = useState(new Date());
   const [clinicOpenTime, setClinicOpenTime] = useState();
   const [clinicCloseTime, setClinicCloseTime] = useState();
+
+  // State used to store generated slots from Clinic Opening Time and Closing Time
   const [generatedSlots, setGeneratedSlots] = useState([]);
 
+  // Slots that have been selected by the clinican stating available - to be stored in the database
+  const [selectedSlotsData, setSelectedSlotsData] = useState([]);
+
+  const token = getCookie("token");
+
+  // Data from the child component 'Slots'
+  const selectedSlotsList = (data) => {
+    setSelectedSlotsData(data);
+  };
+  // console.log("Data from Slots component", selectedSlotsData);
+
+  // Function to convert the default time to Date format
   const convertToDate = (str) => {
     var date = new Date(str);
     var month = ("0" + (date.getMonth() + 1)).slice(-2);
     var day = ("0" + date.getDate()).slice(-2);
-    var hours = ("0" + date.getHours()).slice(-2);
-    var minutes = ("0" + date.getMinutes()).slice(-2);
-    return [month, day, date.getFullYear(), hours, minutes].join("-");
+    return [month, day, date.getFullYear()].join("-");
   };
 
+  // Function to convert the default format of current time to HH:MM format
   const convertToTime = (str) => {
     var date = new Date(str);
     var hours = ("0" + date.getHours()).slice(-2);
@@ -30,7 +45,6 @@ const Availability = () => {
   console.log(convertToDate(appointmentDate));
   console.log(convertToTime(clinicOpenTime));
   console.log(convertToTime(clinicCloseTime));
-  console.log(typeof convertToTime(clinicOpenTime));
   console.log("generatedSlots", generatedSlots);
 
   function generateTimeslots(timeInterval, startTime, endTime) {
@@ -126,6 +140,36 @@ const Availability = () => {
     );
   }
 
+  // API to create availability in backend
+
+  const onAvailabilitySubmit = (event) => {
+    event.preventDefault();
+
+    const clinicianId = isAuth()._id;
+    const availability = [
+      {
+        date: convertToDate(appointmentDate),
+        slots: selectedSlotsData,
+      },
+    ];
+
+    console.log(availability);
+    console.log(typeof selectedSlotsData);
+
+    axios({
+      method: "POST",
+      url: `${process.env.REACT_APP_API}/availability`,
+      headers: { Authorization: `Bearer ${token}` },
+      data: { clinicianId, availability },
+    })
+      .then((response) => {
+        console.log("Created Stories", response);
+      })
+      .catch((error) => {
+        console.log("Stories ERROR", error);
+      });
+  };
+
   return (
     <div id="wrapper" className="toggled">
       <SideBarView selected="/" />
@@ -167,8 +211,16 @@ const Availability = () => {
           >
             Generate Slots
           </span>
-          <Slots timeSlots={generatedSlots}></Slots>
-          <button className="btn btn-primary mt-4">Submit</button>
+          <Slots
+            selectedSlotsList={selectedSlotsList}
+            timeSlots={generatedSlots}
+          ></Slots>
+          <button
+            className="btn btn-primary mt-4"
+            onClick={onAvailabilitySubmit}
+          >
+            Submit
+          </button>
         </div>
       </div>
     </div>
