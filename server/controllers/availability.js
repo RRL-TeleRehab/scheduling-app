@@ -7,17 +7,19 @@ const User = require("../models/user");
 
 exports.createAvailability = (req, res, next) => {
   const { clinicianId, availability } = req.body;
+  console.log(availability[0].date);
+
   Availability.findOne({
     clinicianId: clinicianId,
-  }).exec((err, clinicianAvailability) => {
+  }).exec((err, clinicianExists) => {
     // check if availability has been already provided or not. If not, create a new availability otherwise update availability
     if (err) {
       return res.status(400).json({
         error: "Error finding clinician availability",
       });
     }
-    // If availability has been already provided earlier then update availability
-    if (clinicianAvailability) {
+    // If availability has been already provided earlier for a particular date, if yes, update availability
+    if (clinicianExists) {
       Availability.findOneAndUpdate(
         { clinicianId: clinicianId },
         {
@@ -25,8 +27,8 @@ exports.createAvailability = (req, res, next) => {
             clinicianId: clinicianId,
             availability: availability,
           },
-        },
-        { new: true }
+        }
+        // { new: true }
       ).exec((err, availability) => {
         if (err || !availability) {
           return res.status(400).json({
@@ -36,7 +38,7 @@ exports.createAvailability = (req, res, next) => {
         return res.status(200).json("Availability updated successfully");
       });
     } else {
-      // create a new Availability for the clinician if no records of availability found
+      // create a new Availability for the clinician if no records of availability found for the specified date
       const newAvailability = new Availability({
         clinicianId: clinicianId,
         availability: availability,
@@ -73,3 +75,5 @@ exports.getClinicianAvailability = (req, res, next) => {
   );
   // append clinician info in response
 };
+
+// Create a Post API call only to update the availability of a clinician for a specific date
