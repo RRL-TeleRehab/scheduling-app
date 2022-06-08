@@ -45,7 +45,11 @@ const Stories = () => {
   };
 
   const deleteStory = (storyId, url) => {
-    deleteImageFromFirebase(url);
+    // Check if a story has a previous coverPhoto
+    let story = stories.find((x) => x._id === storyId);
+    if (story.coverPhoto !== "") {
+      deleteImageFromFirebase(url);
+    }
     axios({
       method: "DELETE",
       url: `${process.env.REACT_APP_API}/admin/story/${storyId}`,

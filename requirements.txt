@@ -1,20 +1,5 @@
-Hub Clinician Portal
-
-Specialization
-Year Registered
-Reg No
-Trained - where they are trained (Location)
-Professional Development courses
-Address
-
-Socials
-Affiliation - where they are affiliated - Place of operation
-
-
 # Handle all the catch errors in UI forms
 # Redirect from account activate page after sucessful account activation 
-
-
 
 # Backend Email template
 

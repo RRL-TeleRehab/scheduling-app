@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       min: 1,
       max: 32,
+      lowercase: true,
     },
     lastName: {
       type: String,
@@ -24,19 +25,23 @@ const userSchema = new mongoose.Schema(
       trim: true,
       min: 1,
       max: 32,
+      lowercase: true,
     },
-    mobile: {
+    clinicContact: {
+      type: Number,
+      trim: true,
+      default: "",
+    },
+    aboutClinician: {
       type: String,
       trim: true,
+      max: 200,
+      default: "",
     },
-    about: {
+    profilePhoto: {
       type: String,
-      trim: true,
-      max: 160,
-    },
-    photo: {
-      type: String,
-      required: false,
+      default:
+        "https://firebasestorage.googleapis.com/v0/b/promote-b3a12.appspot.com/o/userAvatar%2FdefaultAvatar.svg?alt=media&token=57a9ef20-56c2-488c-9e05-3755f6206ec5",
       trim: true,
     },
     hashed_password: {
@@ -55,22 +60,59 @@ const userSchema = new mongoose.Schema(
       data: String,
       default: "",
     },
-    social: {
+    clinicAddress: {
+      streetAddress: { type: String, default: "" },
+      city: { type: String, default: "" },
+      postalCode: { type: String, default: "" },
+      province: { type: String, default: "" },
+      country: { type: String, default: "" },
+    },
+    clinicianSpecialization: [{ type: String }],
+    clinicRegisteredYear: {
+      type: Number,
+      default: "",
+    },
+    clinicRegistrationNo: {
+      type: Number,
+      default: "",
+    },
+    clinicianTrainedLocation: {
+      type: String,
+      default: "",
+    },
+    clinicianProfessionalCourses: [
+      {
+        type: String,
+      },
+    ],
+    affiliatedFrom: {
+      type: String,
+      default: "",
+    },
+    meetingLink: {
+      type: String,
+      default: "",
+    },
+    socialMediaHandles: {
       facebook: {
         type: String,
         required: false,
+        default: "",
       },
       twitter: {
         type: String,
         required: false,
+        default: "",
       },
       linkedin: {
         type: String,
         required: false,
+        default: "",
       },
       instagram: {
         type: String,
         required: false,
+        default: "",
       },
     },
   },
@@ -115,5 +157,3 @@ userSchema.methods = {
 };
 
 module.exports = mongoose.model("User", userSchema);
-
-// update user model with Address field
