@@ -1,6 +1,5 @@
 // User Schema
 const mongoose = require("mongoose");
-const crypto = require("crypto");
 
 const patientSchema = new mongoose.Schema(
   {
@@ -17,6 +16,7 @@ const patientSchema = new mongoose.Schema(
       trim: true,
       min: 1,
       max: 32,
+      lowercase: true,
     },
     lastName: {
       type: String,
@@ -24,9 +24,9 @@ const patientSchema = new mongoose.Schema(
       trim: true,
       min: 1,
       max: 32,
+      lowercase: true,
     },
-    patientDetails: {
-      // patient details update later
+    patientHealthInformation: {
       type: String,
       trim: true,
       required: true,
@@ -35,6 +35,4 @@ const patientSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("User", userSchema);
-
-// update user model with Address field
+module.exports = mongoose.model("Patient", patientSchema);

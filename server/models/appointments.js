@@ -1,18 +1,17 @@
 // User Schema
 const mongoose = require("mongoose");
-const crypto = require("crypto");
 
 const requestedAppointmentSchema = new mongoose.Schema(
   {
     requestedBy: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: "Users",
+      ref: "User",
     },
     requestedTo: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: "Users",
+      ref: "User",
     },
     requestedFor: {
       type: mongoose.Schema.Types.ObjectId,
@@ -22,7 +21,8 @@ const requestedAppointmentSchema = new mongoose.Schema(
     status: {
       type: String,
       required: true,
-      default: "pending", // pending, accepted, rejected
+      default: "pending",
+      enum: ["pending", "accepted", "rejected"],
     },
     appointmentDate: {
       type: Date,
@@ -43,12 +43,12 @@ const requestedAppointmentHistorySchema = new mongoose.Schema(
     requestedBy: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: "Users",
+      ref: "User",
     },
     requestedTo: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: "Users",
+      ref: "User",
     },
     requestedFor: {
       type: mongoose.Schema.Types.ObjectId,
@@ -59,6 +59,7 @@ const requestedAppointmentHistorySchema = new mongoose.Schema(
       type: String,
       required: true,
       default: "pending",
+      enum: ["pending", "accepted", "rejected"],
     },
     appointmentDate: {
       type: Date,
@@ -72,14 +73,20 @@ const requestedAppointmentHistorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const appointments = new mongoose.Schema(
+//upcoming active Appointments
+const appointmentsSchema = new mongoose.Schema(
   {
-    clinicianId: {
+    requestedBy: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: "Users",
+      ref: "User",
     },
-    patientId: {
+    requestedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
+    requestedFor: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: "Patient",
@@ -94,18 +101,22 @@ const appointments = new mongoose.Schema(
     },
   },
   { timestamps: true }
-
   //  this is to store the confirmed appointments
 );
 
 const appointmentsHistorySchema = new mongoose.Schema(
   {
-    clinicianId: {
+    requestedBy: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: "Users",
+      ref: "User",
     },
-    patientId: {
+    requestedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
+    requestedFor: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: "Patient",
@@ -113,7 +124,8 @@ const appointmentsHistorySchema = new mongoose.Schema(
     status: {
       type: String,
       required: true,
-      default: "confirmed", // confirmed or date changed or cancelled
+      default: "active",
+      enum: ["active", "cancelled", "fulfilled", "modified"],
     },
     appointmentDate: {
       type: Date,
@@ -125,5 +137,29 @@ const appointmentsHistorySchema = new mongoose.Schema(
     },
   },
   { timestamps: true }
-  // this is to store the history of the appointments
+  // this is to store the history of the appointments when an change in status occurred. Each entry is stored as a new record
 );
+
+const requestedAppointment = mongoose.model(
+  "RequestedAppointment",
+  requestedAppointmentSchema
+);
+
+const requestedAppointmentHistory = mongoose.model(
+  "RequestedAppointmentHistory",
+  requestedAppointmentHistorySchema
+);
+
+const appointments = mongoose.model("Appointments", appointmentsSchema);
+
+const appointmentsHistory = mongoose.model(
+  "AppointmentsHistory",
+  appointmentsHistorySchema
+);
+
+module.exports = {
+  requestedAppointment: requestedAppointment,
+  requestedAppointmentHistory: requestedAppointmentHistory,
+  appointments: appointments,
+  appointmentsHistory: appointmentsHistory,
+};

@@ -2,8 +2,12 @@ const express = require("express");
 const router = express.Router();
 
 //import controllers
-const { read, update } = require("../controllers/user");
-const { requireSignIn, adminMiddleware } = require("../controllers/auth");
+const { read, update, getHubClinicians } = require("../controllers/user");
+const {
+  requireSignIn,
+  adminMiddleware,
+  userMiddleware,
+} = require("../controllers/auth");
 
 const { updateUserValidator } = require("../validators/auth");
 
@@ -14,6 +18,7 @@ router.get("/user/:id", requireSignIn, read);
 router.put(
   "/user/update",
   requireSignIn,
+  userMiddleware,
   updateUserValidator,
   runValidation,
   update
@@ -29,3 +34,5 @@ router.put(
 );
 
 module.exports = router;
+
+router.get("/clinicians", requireSignIn, userMiddleware, getHubClinicians);

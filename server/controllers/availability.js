@@ -63,17 +63,19 @@ exports.createAvailability = (req, res, next) => {
 
 exports.getClinicianAvailability = (req, res, next) => {
   const clinicianId = req.params.clinicianId;
-  Availability.findOne({ clinicianId: clinicianId }).exec(
-    (err, clinicianAvailability) => {
+  Availability.findOne({ clinicianId: clinicianId })
+    .populate("clinicianId", "") // populating response with hub clinician data
+    .exec((err, clinicianAvailability) => {
       if (err || !clinicianAvailability) {
         return res
           .status(400)
           .json({ message: "Clinician availability not found" });
       }
+
       return res.status(200).json(clinicianAvailability);
-    }
-  );
-  // append clinician info in response
+    });
 };
 
-// Create a Post API call only to update the availability of a clinician for a specific date
+// Create a Post API call only to update the availability of a clinician for a specific date or can use the POST method to update the availability
+
+// Create an DELETE API call only to delete the availability of the clinician for the complete date

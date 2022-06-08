@@ -14,7 +14,6 @@ const {
   userMiddleware,
 } = require("../controllers/auth");
 
-// validators
 router.post(
   "/availability",
   requireSignIn,
