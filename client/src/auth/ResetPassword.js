@@ -39,7 +39,7 @@ const ResetPassword = ({ match }) => {
       .then((response) => {
         console.log(" Forgot Password Success", response);
         toast.success(response.data.message);
-        setValues({ ...values, buttonText: "Request email sent" });
+        setValues({ ...values, buttonText: "Request email sent", email: "" });
       })
       .catch((error) => {
         console.log("Forgot Password Failure", error);
@@ -61,6 +61,7 @@ const ResetPassword = ({ match }) => {
           value={email}
           placeholder="Email"
           onChange={handleChange("email")}
+          required
         ></input>
       </div>
 

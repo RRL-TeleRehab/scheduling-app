@@ -7,14 +7,6 @@ const _ = require("lodash");
 exports.signup = (req, res, next) => {
   const { firstName, lastName, email, password, role } = req.body;
 
-  // check if the fields are empty
-  if (!firstName || !lastName || !email || !password || !role) {
-    console.log("SIGNUP ERROR", err);
-    return res.status(400).json({
-      error: "All fields are required",
-    });
-  }
-
   // check if account already exists
   User.findOne({ email }).exec((err, user) => {
     if (user) {
@@ -211,9 +203,13 @@ exports.forgotPassword = (req, res, next) => {
       });
     }
     // generate JWT Token
-    const token = jwt.sign({ _id: user._id }, process.env.JWT_RESET_PASSWORD, {
-      expiresIn: "15m",
-    });
+    const token = jwt.sign(
+      { _id: user._id, firstName: user.firstName, lastName: user.lastName },
+      process.env.JWT_RESET_PASSWORD,
+      {
+        expiresIn: "15m",
+      }
+    );
 
     // Email content to verify the account
     const emailData = {
@@ -222,7 +218,7 @@ exports.forgotPassword = (req, res, next) => {
       subject: `Password reset link`,
       html: `
         <p>Please use the following link to reset your password</p>
-        <p>${process.env.CLIENT_URL}/auth/password/reset/${token}</p>
+        <p>${process.env.CLIENT_URL}/auth/password/forgot/${token}</p>
         <hr/>
         <p>This email may contain sensitive information</p>
         <p>${process.env.CLIENT_URL}/</p>

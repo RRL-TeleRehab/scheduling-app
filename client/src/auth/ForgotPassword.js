@@ -1,21 +1,43 @@
-import React, { Fragment, useState } from "react";
+import React, { useState, useEffect, Fragment } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.min.css";
 import "./styles/ForgotPassword.css";
 import logo from "../media/logo.svg";
 import { Link } from "react-router-dom";
+import jwt from "jsonwebtoken";
 
 // history prop comes from react-router-dom
-const ForgotPassword = ({ history }) => {
+const ForgotPassword = ({ match }) => {
   const [values, setValues] = useState({
+    firstName: "",
     newPassword: "",
     confirmNewPassword: "",
+    token: "",
     buttonText: "Confirm",
     hover: false,
+    lastName: "",
   });
 
-  const { newPassword, confirmNewPassword, buttonText, hover } = values;
+  const {
+    firstName,
+    lastName,
+    token,
+    newPassword,
+    confirmNewPassword,
+    buttonText,
+    hover,
+  } = values;
+
+  useEffect(() => {
+    let token = match.params.token;
+    console.log(token);
+    let { firstName, lastName } = jwt.decode(token);
+    console.log(firstName, lastName);
+    if (token) {
+      setValues({ ...values, firstName, lastName, token });
+    }
+  }, []);
 
   const handleChange = (name) => (event) => {
     setValues({ ...values, [name]: event.target.value });
@@ -35,16 +57,21 @@ const ForgotPassword = ({ history }) => {
     axios({
       method: "PUT",
       url: `${process.env.REACT_APP_API}/reset-password`,
-      data: { newPassword, confirmNewPassword },
+      data: { newPassword, confirmNewPassword, resetPasswordLink: token },
     })
       .then((response) => {
-        console.log(" Forgot Password Success", response);
+        console.log(" Reset Password Success", response);
         toast.success(response.data.message);
-        setValues({ ...values, buttonText: "Request email sent" });
+        setValues({
+          ...values,
+          buttonText: "Password Updated",
+          newPassword: "",
+          confirmNewPassword: "",
+        });
       })
       .catch((error) => {
-        console.log("Forgot Password Failure", error);
-        setValues({ ...values, buttonText: "Submit" });
+        console.log("Reset Password Failure", error);
+        setValues({ ...values, buttonText: "Confirm" });
         if (error && error.response.data.error) {
           toast.error(error.response.data.error);
         } else {
@@ -63,7 +90,8 @@ const ForgotPassword = ({ history }) => {
               className="form-control"
               placeholder="Password"
               value={newPassword}
-              onChange={handleChange("password")}
+              onChange={handleChange("newPassword")}
+              required
             />
           </div>
         </div>
@@ -74,7 +102,8 @@ const ForgotPassword = ({ history }) => {
               className="form-control"
               placeholder="Confirm Password"
               value={confirmNewPassword}
-              onChange={handleChange("confirmPassword")}
+              onChange={handleChange("confirmNewPassword")}
+              required
             />
           </div>
         </div>
@@ -93,25 +122,28 @@ const ForgotPassword = ({ history }) => {
   );
 
   return (
-    <div className="forgot-password-form col-md-4 offset-md-4">
-      <ToastContainer></ToastContainer>
-      <div className="forgot-password-form-info">
-        <img
-          src={logo}
-          alt="promote"
-          className="forgot-password-form-logo"
-        ></img>
-        <h2 className="forgot-password-form-heading">Reset Password</h2>
+    <Fragment>
+      <div>{firstName + lastName}</div>
+      <div className="forgot-password-form col-md-4 offset-md-4">
+        <ToastContainer></ToastContainer>
+        <div className="forgot-password-form-info">
+          <img
+            src={logo}
+            alt="promote"
+            className="forgot-password-form-logo"
+          ></img>
+          <h2 className="forgot-password-form-heading">Reset Password</h2>
+        </div>
+        {forgotPasswordForm()}
+        <div className="user-signin-redirect ml-2">
+          <p> Go Back </p>
+          {"  "}
+          <Link to="/signin" className="user-signin-redirect-link">
+            Login
+          </Link>
+        </div>
       </div>
-      {forgotPasswordForm()}
-      <div className="user-signin-redirect ml-2">
-        <p> Go Back </p>
-        {"  "}
-        <Link to="/signin" className="user-signin-redirect-link">
-          Login
-        </Link>
-      </div>
-    </div>
+    </Fragment>
   );
 };
 

@@ -53,7 +53,7 @@ const Routes = () => {
           component={Availability}
         ></PrivateRoute>
         <Route
-          path="/auth/password/forgot"
+          path="/auth/password/forgot/:token"
           exact
           component={ForgotPassword}
         ></Route>
