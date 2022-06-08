@@ -26,11 +26,6 @@ const patientSchema = new mongoose.Schema(
       max: 32,
       lowercase: true,
     },
-    patientHealthInformation: {
-      type: String,
-      trim: true,
-      required: true,
-    },
   },
   { timestamps: true }
 );

@@ -2,7 +2,10 @@ const express = require("express");
 const router = express.Router();
 
 // import controllers
-const { createAppointmentRequest } = require("../controllers/appointments");
+const {
+  createAppointmentRequest,
+  updateAppointmentRequest,
+} = require("../controllers/appointments");
 
 // import middleware
 const {
@@ -21,6 +24,13 @@ router.post(
   requireSignIn,
   spokeClinicianMiddleware,
   createAppointmentRequest
+);
+
+router.put(
+  "/request-appointment/:appointmentId",
+  requireSignIn,
+  hubClinicianMiddleware,
+  updateAppointmentRequest
 );
 
 module.exports = router;

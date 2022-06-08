@@ -54,11 +54,13 @@ exports.update = (req, res, next) => {
   });
 };
 
-exports.getHubClinicians = (req, res) => {
-  User.find({ role: "hub" }).exec((err, users) => {
-    if (err || !users) {
-      return res.status(400).json({ message: "No clinicians found" });
-    }
-    return res.status(200).json(users);
-  });
+exports.getHubClinicians = (req, res, next) => {
+  User.find({ role: "hub" })
+    .sort({ lastName: 1, firstName: 1 })
+    .exec((err, users) => {
+      if (err || !users) {
+        return res.status(400).json({ message: "No clinicians found" });
+      }
+      return res.status(200).json(users);
+    });
 };

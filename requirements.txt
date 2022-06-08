@@ -61,3 +61,12 @@
 
 
     sudo mongod --dbpath /System/Volumes/Data/data/db 
+
+
+    populate({
+    path:'posts',
+    populate({
+         path:'user'
+         select:'name email age'
+    })
+})
