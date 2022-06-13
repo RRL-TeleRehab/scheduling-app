@@ -36,11 +36,11 @@ exports.createAppointmentRequest = asyncHandler(async (req, res, next) => {
       lastName: patientLastName,
       email: patientEmail,
     });
-    console.log(createNewPatientInfo);
+    // console.log(createNewPatientInfo);
     patientData = createNewPatientInfo;
   }
   patientData = patientInfo;
-  console.log(patientData._id);
+  // console.log(patientData._id);
 
   const appointmentData = {
     requestedBy,

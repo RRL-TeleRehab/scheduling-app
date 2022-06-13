@@ -14,6 +14,7 @@ const Signup = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    role: "",
     buttonText: "Register",
     hover: false,
   });
@@ -26,6 +27,7 @@ const Signup = () => {
     confirmPassword,
     buttonText,
     hover,
+    role,
   } = values;
 
   const handleChange = (name) => (event) => {
@@ -46,7 +48,7 @@ const Signup = () => {
     axios({
       method: "POST",
       url: `${process.env.REACT_APP_API}/signup`,
-      data: { firstName, lastName, email, password, confirmPassword },
+      data: { firstName, lastName, email, password, confirmPassword, role },
     })
       .then((response) => {
         console.log(response);
@@ -57,6 +59,7 @@ const Signup = () => {
           email: "",
           password: "",
           confirmPassword: "",
+          role: "",
           buttonText: "Email Sent",
         });
         toast.success(response.data.message);
@@ -81,8 +84,9 @@ const Signup = () => {
             <input
               type="radio"
               className="form-check-input"
-              value="option1"
+              value="spoke"
               name="signup-type"
+              onChange={handleChange("role")}
             />
             <label class="form-check-label signup-type-label">
               Spoke Clinician
@@ -94,8 +98,9 @@ const Signup = () => {
             <input
               type="radio"
               className="form-check-input"
-              value="option1"
+              value="hub"
               name="signup-type"
+              onChange={handleChange("role")}
             />
             <label class="form-check-label signup-type-label">
               Hub Clinician

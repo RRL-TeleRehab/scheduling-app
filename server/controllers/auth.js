@@ -21,6 +21,8 @@ exports.signup = (req, res, next) => {
       { expiresIn: "15m" }
     );
 
+    console.log(req.body);
+
     // Email content to verify the account
     const emailData = {
       from: process.env.EMAIL_FROM,
