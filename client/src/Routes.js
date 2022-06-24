@@ -9,7 +9,7 @@ import AdminRoute from "./auth/AdminRoute";
 import ForgotPassword from "./auth/ForgotPassword";
 import ResetPassword from "./auth/ResetPassword";
 import Profile from "./components/Profile";
-import Notification from "./components/Notification";
+import Clinicians from "./components/Clinicians";
 import PageNotFound from "./components/PageNotFound";
 import AdminProfile from "./components/AdminProfile";
 import Stories from "./components/adminComponents/Stories";
@@ -27,9 +27,9 @@ const Routes = () => {
         <Route path="/auth/activate/:token" exact component={Activate} />
         <PrivateRoute path="/profile" exact component={Profile}></PrivateRoute>
         <PrivateRoute
-          path="/notification"
+          path="/clinicians"
           exact
-          component={Notification}
+          component={Clinicians}
         ></PrivateRoute>
         <AdminRoute path="/profile" exact component={AdminProfile}></AdminRoute>
         <AdminRoute

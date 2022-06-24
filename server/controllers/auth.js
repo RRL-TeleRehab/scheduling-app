@@ -58,11 +58,16 @@ exports.accountActivation = (req, res, next) => {
         }
         const { firstName, lastName, email, password, role } =
           jwt.decode(token);
+        const username =
+          firstName.charAt(0).toUpperCase() +
+          lastName +
+          Math.floor(1000 + Math.random() * 1000);
         const user = new User({
           firstName,
           lastName,
           email,
           password,
+          username,
           role,
         });
         // if token is correct and verifies, save the user record in the database

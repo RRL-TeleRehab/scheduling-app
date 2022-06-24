@@ -88,7 +88,7 @@ const Signup = () => {
               name="signup-type"
               onChange={handleChange("role")}
             />
-            <label class="form-check-label signup-type-label">
+            <label className="form-check-label signup-type-label">
               Spoke Clinician
             </label>
           </div>
@@ -102,7 +102,7 @@ const Signup = () => {
               name="signup-type"
               onChange={handleChange("role")}
             />
-            <label class="form-check-label signup-type-label">
+            <label className="form-check-label signup-type-label">
               Hub Clinician
             </label>
           </div>

@@ -24,7 +24,6 @@ const Stories = () => {
       url: `${process.env.REACT_APP_API}/story`,
     })
       .then((response) => {
-        // console.log("All Stories", response.data);
         setValues({ ...values, stories: response.data });
       })
       .catch((error) => {

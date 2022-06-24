@@ -27,6 +27,16 @@ const userSchema = new mongoose.Schema(
       max: 32,
       lowercase: true,
     },
+    username: {
+      type: String,
+      unique: true,
+      trim: true,
+    },
+    title: {
+      type: String,
+      default: "",
+      enum: ["Dr", "Mr", "Mrs", "Ms", "Miss", "Mx", "Rev", "Sir"],
+    },
     clinicContact: {
       type: Number,
       trim: true,
@@ -51,6 +61,18 @@ const userSchema = new mongoose.Schema(
     salt: {
       type: String,
     },
+    yearOfBirth: {
+      type: String,
+      default: "",
+    },
+    yearsOfExperience: {
+      type: Number,
+      default: 0,
+    },
+    gender: {
+      type: String,
+      default: "",
+    },
     role: {
       type: String,
       default: "spoke",
@@ -58,6 +80,10 @@ const userSchema = new mongoose.Schema(
     },
     resetPasswordLink: {
       data: String,
+      default: "",
+    },
+    clinicName: {
+      type: String,
       default: "",
     },
     clinicAddress: {

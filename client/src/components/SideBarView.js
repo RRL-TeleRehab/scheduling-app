@@ -23,12 +23,15 @@ const SideBarView = ({ selected }) => {
           faIcon="fas fa-chart-bar"
           selected={selected}
         />
-        <SideBarItem
-          link="/notification"
-          title="Issue Notification"
-          faIcon="fas fa-home"
-          selected={selected}
-        />
+        {isAuth() &&
+          (isAuth().role === "admin" || isAuth().role === "spoke") && (
+            <SideBarItem
+              link="/clinicians"
+              title="Clinicians"
+              faIcon="fas fa-home"
+              selected={selected}
+            />
+          )}
         {isAuth() && isAuth().role === "admin" && (
           <SideBarItem
             link="/admin/stories"

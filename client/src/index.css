@@ -5,10 +5,10 @@
   
   .sidebar-item.active{
     background: rgb(4, 123, 170); 
-    border-left: 5px solid rgb(255, 255, 255)!important;
+    border-left: 5px solid rgb(234, 18, 18)!important;
   }
   .sidebar-item.active:hover{
-    background: rgb(1, 108, 150);
+    background: rgb(62, 236, 85);
   }
   .sidebar-link.active {
     color: #fff;
@@ -25,7 +25,7 @@
   .main-navbar {
     position: fixed;
     background: grey;
-    width: 88%;
+    width: 86.3%;
     padding-top:1px;
     color:#fff
   }
