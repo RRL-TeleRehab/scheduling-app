@@ -159,7 +159,7 @@ const NewStory = ({ history }) => {
           </form>
         </div>
       </div>
-      {JSON.stringify(imageAsUrl.imgUrl)}
+      {/* {JSON.stringify(imageAsUrl.imgUrl)}s */}
     </div>
   );
 };

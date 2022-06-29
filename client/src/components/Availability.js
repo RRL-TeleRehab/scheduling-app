@@ -1,4 +1,4 @@
-import React, { useState, Fragment } from "react";
+import React, { useState, useEffect } from "react";
 import SideBarView from "./SideBarView";
 import NavBar from "./NavBar";
 import { getCookie, isAuth } from "../auth/helpers.js";
@@ -10,10 +10,17 @@ import "./Availability.css";
 
 const Availability = () => {
   const [appointmentDate, setAppointmentDate] = useState(new Date());
+  const [loading, setLoading] = useState(true);
 
   // Slots that have been selected by the clinician stating available - to be stored in the database
   const [selectedSlots, setSelectedSlots] = useState([]);
   const token = getCookie("token");
+
+  let timeSlotsAvailabilityFromDBByDate = [];
+  let timeSlotsFromDB = [];
+
+  // get Todays Data and update UI
+  const [availabilityByDate, setAvailabilityByDate] = useState([]);
 
   // Function to convert the default time to Date format
   const convertToDate = (str) => {
@@ -23,7 +30,57 @@ const Availability = () => {
     return [month, day, date.getFullYear()].join("-");
   };
 
-  console.log(convertToDate(appointmentDate));
+  console.log("today value", availabilityByDate);
+
+  // get Current date available time slots from the database
+  const getAvailabilityByDate = () => {
+    const clinicianId = isAuth()._id;
+    const availabilityDate = convertToDate(appointmentDate);
+    axios({
+      method: "GET",
+      url: `${process.env.REACT_APP_API}/availability/${clinicianId}/${availabilityDate}`,
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((response) => {
+        setAvailabilityByDate(
+          response.data.availableSlots[0].availability.slots
+        );
+        timeSlotsAvailabilityFromDBByDate.length = 0;
+        availabilityByDate.map(async (slot) => {
+          timeSlotsAvailabilityFromDBByDate.push({
+            time: slot.time,
+            isAvailable: slot.isAvailable,
+          });
+        });
+        setSelectedSlots(timeSlotsAvailabilityFromDBByDate);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.log("Availability ERROR", error);
+      });
+  };
+
+  useEffect(() => {
+    getAvailabilityByDate();
+  }, [appointmentDate]);
+
+  // useEffect(() => {
+  //   timeSlotsAvailabilityFromDBByDate.length = 0;
+  //   timeSlotsFromDB.length = 0;
+  //   availabilityByDate.map(async (slot) => {
+  //     timeSlotsAvailabilityFromDBByDate.push({
+  //       time: slot.time,
+  //       isAvailable: slot.isAvailable,
+  //     });
+  //     timeSlotsFromDB.push(slot.time);
+  //   });
+  //   setSelectedSlots(timeSlotsAvailabilityFromDBByDate);
+  //   console.log(
+  //     "default slots from db",
+  //     timeSlotsAvailabilityFromDBByDate,
+  //     timeSlotsFromDB
+  //   );
+  // }, [availabilityByDate, appointmentDate]);
 
   // generate the default slots for the day starting at 12:00AM to 12:00PM
   let generateTimeSlots = {
@@ -47,12 +104,13 @@ const Availability = () => {
     startTime.add(generateTimeSlots.slotInterval, "minutes");
   }
 
+  // console.log("generated time slots", generatedTimeSlots);
   const handleCheckBoxChange = (event) => {
     var selectedCheckboxList = [...selectedSlots];
     if (event.target.checked) {
       selectedCheckboxList = [
         ...selectedSlots,
-        { isAvailable: true, time: event.target.value },
+        { time: event.target.value, isAvailable: true },
       ];
     } else {
       selectedCheckboxList.splice(selectedSlots.indexOf(event.target.value), 1);
@@ -60,7 +118,7 @@ const Availability = () => {
     setSelectedSlots(selectedCheckboxList);
   };
 
-  console.log(selectedSlots);
+  console.log("Slots selected from UI", selectedSlots);
 
   // API to create availability in backend
   const updateAvailability = (event) => {
@@ -74,8 +132,8 @@ const Availability = () => {
       },
     ];
 
-    console.log(availability);
-    console.log(typeof selectedSlots);
+    // console.log(availability);
+    // console.log(typeof selectedSlots);
 
     axios({
       method: "POST",
@@ -85,6 +143,7 @@ const Availability = () => {
     })
       .then((response) => {
         console.log("created availability", response);
+        getAvailabilityByDate();
       })
       .catch((error) => {
         console.log("Availability ERROR", error);
@@ -97,7 +156,7 @@ const Availability = () => {
       <div id="page-content-wrapper " className="">
         <NavBar />
         <div className="container-fluid ">
-          <div class="row">
+          <div className="row">
             <div className="col-md-4 offset-2">
               <h3>Add your availability</h3>
               <Calendar
@@ -117,6 +176,9 @@ const Availability = () => {
                           type="checkbox"
                           value={slot}
                           onChange={handleCheckBoxChange}
+                          defaultChecked={
+                            timeSlotsFromDB.includes(slot) ? true : false
+                          }
                         ></input>
                         <span>{slot}</span>
                       </label>

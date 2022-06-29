@@ -4,6 +4,7 @@ import NavBar from "./NavBar";
 import axios from "axios";
 import { getCookie } from "../auth/helpers";
 import Card from "./Card/Card";
+import { Link } from "react-router-dom";
 
 const Clinicians = () => {
   const [values, setValues] = useState({
@@ -73,7 +74,9 @@ const Clinicians = () => {
               })
               .map((c, index) => (
                 <div key={c._id} className="col-4 mb-3">
-                  {<Card clinician={c}></Card>}
+                  <Link to={`/clinicians/${c._id}`}>
+                    <Card clinician={c}></Card>{" "}
+                  </Link>
                 </div>
               ))}
           </div>

@@ -195,7 +195,7 @@ const UpdateStory = ({ match }) => {
           </form>
         </div>
       </div>
-      {JSON.stringify(imageAsUrl.imgUrl)}
+      {/* {JSON.stringify(imageAsUrl.imgUrl)} */}
     </div>
   );
 };

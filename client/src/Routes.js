@@ -16,6 +16,7 @@ import Stories from "./components/adminComponents/Stories";
 import NewStory from "./components/adminComponents/NewStory";
 import UpdateStory from "./components/adminComponents/UpdateStory";
 import Availability from "./components/Availability";
+import SlotBooking from "./components/slotBooking/SlotBooking";
 
 const Routes = () => {
   return (
@@ -30,6 +31,11 @@ const Routes = () => {
           path="/clinicians"
           exact
           component={Clinicians}
+        ></PrivateRoute>
+        <PrivateRoute
+          path="/clinicians/:clinicianID"
+          exact
+          component={SlotBooking}
         ></PrivateRoute>
         <AdminRoute path="/profile" exact component={AdminProfile}></AdminRoute>
         <AdminRoute
