@@ -5,6 +5,8 @@ const router = express.Router();
 const {
   createAppointmentRequest,
   updateAppointmentRequest,
+  getAppointmentsRequestedToHubClinician,
+  getRequestedAppointmentById,
 } = require("../controllers/appointments");
 
 // import middleware
@@ -18,6 +20,19 @@ const {
 // import validators
 
 // routes
+router.get(
+  "/request-appointment",
+  requireSignIn,
+  hubClinicianMiddleware,
+  getAppointmentsRequestedToHubClinician
+);
+
+router.get(
+  "/request-appointment/:appointmentId",
+  requireSignIn,
+  userMiddleware,
+  getRequestedAppointmentById
+);
 
 router.post(
   "/request-appointment",

@@ -9,6 +9,80 @@ const ErrorResponse = require("../helpers/ErrorResponse");
 const { sendEmailWithNodemailer } = require("../helpers/email");
 const Patient = require("../models/patient");
 const Availability = require("../models/availability");
+const { response } = require("express");
+
+// @description :  Get Appointments of a clinician - pending, rejected or accepted
+// @route GET /api/request-appointment
+// @access Hub Clinician
+
+exports.getAppointmentsRequestedToHubClinician = asyncHandler(
+  async (req, res, next) => {
+    const userId = req.user._id;
+    const appointments = await requestedAppointment
+      .find({
+        requestedTo: userId,
+      })
+      .sort({ appointmentDate: 1 })
+      .sort({ appointmentTime: 1 })
+      .populate([
+        {
+          path: "requestedBy",
+          model: "User",
+          select: "firstName lastName email",
+        },
+        {
+          path: "requestedTo",
+          model: "User",
+          select: "firstName lastName email",
+        },
+        {
+          path: "requestedFor",
+          model: "Patient",
+          select: "firstName lastName email",
+        },
+      ]);
+    if (!appointments) {
+      return res.status(400).json({
+        message: "No appointment found",
+      });
+    }
+    res.status(200).json({ appointments });
+  }
+);
+
+// @description :  Get requested Appointment details by appointmentId
+// @route GET /api/request-appointment/:appointmentId
+// @access Hub Clinician
+exports.getRequestedAppointmentById = asyncHandler(async (req, res, next) => {
+  const appointmentId = req.params.appointmentId;
+  requestedAppointment
+    .findById(appointmentId)
+    .populate([
+      {
+        path: "requestedBy",
+        model: "User",
+        select: "firstName lastName email profilePhoto",
+      },
+      {
+        path: "requestedTo",
+        model: "User",
+        select: "firstName lastName email profilePhoto",
+      },
+      {
+        path: "requestedFor",
+        model: "Patient",
+        select: "firstName lastName email",
+      },
+    ])
+    .exec((err, appointmentInfo) => {
+      if (err || !appointmentInfo) {
+        return res.status(400).json({
+          error: "appointment details not found",
+        });
+      }
+      res.status(200).json(appointmentInfo);
+    });
+});
 
 // @description :  Create a new Appointment request to Hub Clinician by a spoke clinician for a patient at a particular date and slot time
 // @route POST /api/request-appointment
@@ -29,7 +103,10 @@ exports.createAppointmentRequest = asyncHandler(async (req, res, next) => {
   let patientData = {};
 
   // check if patient Already exists otherwise add patient data to DB
-  const patientInfo = await Patient.findOne({ email: patientEmail });
+  const patientInfo = await Patient.findOneAndUpdate(
+    { email: patientEmail },
+    { firstName: patientFirstName, lastName: patientLastName }
+  );
   if (!patientInfo) {
     const createNewPatientInfo = await Patient.create({
       firstName: patientFirstName,
@@ -40,7 +117,7 @@ exports.createAppointmentRequest = asyncHandler(async (req, res, next) => {
     patientData = createNewPatientInfo;
   }
   patientData = patientInfo;
-  // console.log(patientData._id);
+  console.log(patientData._id);
 
   const appointmentData = {
     requestedBy,

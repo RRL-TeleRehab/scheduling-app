@@ -10,6 +10,8 @@ exports.read = (req, res, next) => {
     }
     user.hashed_password = undefined;
     user.salt = undefined;
+    user.resetPasswordLink = undefined;
+    user.meetingLink = undefined;
     return res.json(user);
   });
 };
@@ -49,6 +51,7 @@ exports.update = (req, res, next) => {
       }
       updatedUser.hashed_password = undefined;
       updatedUser.salt = undefined;
+      user.resetPasswordLink = undefined;
       return res.json(updatedUser);
     });
   });

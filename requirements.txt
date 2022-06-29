@@ -70,3 +70,5 @@
          select:'name email age'
     })
 })
+
+Adding availability user side UI modifications.

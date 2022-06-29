@@ -34,11 +34,11 @@ const userSchema = new mongoose.Schema(
     },
     title: {
       type: String,
-      default: "",
-      enum: ["Dr", "Mr", "Mrs", "Ms", "Miss", "Mx", "Rev", "Sir"],
+      default: " ",
+      enum: [" ", "Dr", "Mr", "Mrs", "Ms", "Miss", "Mx", "Rev", "Sir"],
     },
     clinicContact: {
-      type: Number,
+      type: String,
       trim: true,
       default: "",
     },
@@ -95,12 +95,12 @@ const userSchema = new mongoose.Schema(
     },
     clinicianSpecialization: [{ type: String }],
     clinicRegisteredYear: {
-      type: Number,
+      type: String,
       default: "",
     },
     clinicRegistrationNo: {
       type: Number,
-      default: "",
+      default: 0,
     },
     clinicianTrainedLocation: {
       type: String,

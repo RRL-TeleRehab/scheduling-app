@@ -113,10 +113,10 @@ exports.signin = (req, res, next) => {
     const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
-    const { email, _id, firstName, lastName, role } = user;
+    const { email, _id, firstName, lastName, role, profilePhoto } = user;
     return res.json({
       token: token,
-      user: { _id, firstName, lastName, email, role },
+      user: { _id, firstName, lastName, email, role, profilePhoto },
     });
   });
 };
@@ -225,7 +225,7 @@ exports.forgotPassword = (req, res, next) => {
       subject: `Password reset link`,
       html: `
         <p>Please use the following link to reset your password</p>
-        <p>${process.env.CLIENT_URL}/auth/password/forgot/${token}</p>
+        <p>${process.env.CLIENT_URL}/auth/password/reset/${token}</p>
         <hr/>
         <p>This email may contain sensitive information</p>
         <p>${process.env.CLIENT_URL}/</p>

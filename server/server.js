@@ -44,7 +44,10 @@ app.use(bodyParser.json());
 if (process.env.NODE_ENV === "development") {
   app.use(
     cors({
-      origin: `http://localhost:3000` || process.env.CLIENT_URL,
+      origin:
+        `http://localhost:3000` ||
+        `http://localhost:3001` ||
+        process.env.CLIENT_URL,
     })
   ); // allow all requests from all domains
 }

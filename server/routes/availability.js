@@ -21,7 +21,7 @@ router.post(
   createAvailability
 );
 router.get(
-  "/availability/:clinicianId",
+  "/availability/:clinicianId/:availabilityDate",
   requireSignIn,
   userMiddleware,
   getClinicianAvailability
