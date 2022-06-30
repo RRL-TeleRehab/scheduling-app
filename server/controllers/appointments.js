@@ -21,6 +21,7 @@ exports.getAppointmentsRequestedToHubClinician = asyncHandler(
     const appointments = await requestedAppointment
       .find({
         requestedTo: userId,
+        status: { $in: ["pending", "rejected"] },
       })
       .sort({ appointmentDate: 1 })
       .sort({ appointmentTime: 1 })
@@ -28,12 +29,12 @@ exports.getAppointmentsRequestedToHubClinician = asyncHandler(
         {
           path: "requestedBy",
           model: "User",
-          select: "firstName lastName email",
+          select: "firstName lastName email profilePhoto",
         },
         {
           path: "requestedTo",
           model: "User",
-          select: "firstName lastName email",
+          select: "firstName lastName email profilePhoto",
         },
         {
           path: "requestedFor",
@@ -61,12 +62,14 @@ exports.getRequestedAppointmentById = asyncHandler(async (req, res, next) => {
       {
         path: "requestedBy",
         model: "User",
-        select: "firstName lastName email profilePhoto",
+        select:
+          "firstName lastName email profilePhoto gender clinicContact clinicName",
       },
       {
         path: "requestedTo",
         model: "User",
-        select: "firstName lastName email profilePhoto",
+        select:
+          "firstName lastName email profilePhoto gender clinicContact clinicName",
       },
       {
         path: "requestedFor",
@@ -138,7 +141,7 @@ exports.createAppointmentRequest = asyncHandler(async (req, res, next) => {
 });
 
 // @description :  Update a appointment request status which is sent by Spoke Clinician to Hub Clinician for a patient at a particular date and slot time
-// @route PUT /api/request-appointment/:id
+// @route PUT /api/request-appointment/:appointmentId
 // @access Hub Clinician
 exports.updateAppointmentRequest = asyncHandler(async (req, res, next) => {
   if (req.body.status === "accepted") {
@@ -155,11 +158,16 @@ exports.updateAppointmentRequest = asyncHandler(async (req, res, next) => {
     // @Case2: Appointment request rejected
     // when an appointment status is changed to rejected by Hub clinician,
     // a record update in requestedAppointment with status as 'rejected'
-    //  new record in requestedAppointmentHistory with status as 'rejected'
+    // new record in requestedAppointmentHistory with status as 'rejected'
+    // send email to requestedBy, requestedFor and requestedTo about appointment rejection status done by Hub Clinician
 
     // check if appointment exists based on appointmentId
     const appointmentRequestStatusUpdateInfo = await requestedAppointment
-      .findByIdAndUpdate(req.params.appointmentId, req.body, { new: true })
+      .findByIdAndUpdate(
+        req.params.appointmentId,
+        { status: req.body.status },
+        { new: true }
+      )
       .populate([
         {
           path: "requestedBy",
@@ -177,13 +185,25 @@ exports.updateAppointmentRequest = asyncHandler(async (req, res, next) => {
           select: "firstName lastName email",
         },
       ]);
+
     if (!appointmentRequestStatusUpdateInfo) {
       return res.status(404).json({
         message: `No appointment found with Id ${req.params.appointmentId}`,
       });
     }
+
+    const appointmentRequestHistoryUpdateData = {
+      requestedBy: appointmentRequestStatusUpdateInfo.requestedBy,
+      requestedFor: appointmentRequestStatusUpdateInfo.requestedFor,
+      requestedTo: appointmentRequestStatusUpdateInfo.requestedTo,
+      status: appointmentRequestStatusUpdateInfo.status,
+      appointmentDate: appointmentRequestStatusUpdateInfo.appointmentDate,
+      appointmentTime: appointmentRequestStatusUpdateInfo.appointmentTime,
+    };
     const appointmentRequestHistoryUpdate =
-      await requestedAppointmentHistory.create(req.body);
+      await requestedAppointmentHistory.create(
+        appointmentRequestHistoryUpdateData
+      );
 
     // send email for appointment rejection
     emailList = [
@@ -196,17 +216,26 @@ exports.updateAppointmentRequest = asyncHandler(async (req, res, next) => {
       to: emailList,
       subject: `Thank you for choosing PROMOTE. Appointment not available`,
       html: `
-          <p>Unfortunately your appointment :  ${appointmentRequestStatusUpdateInfo._id} 
-          on ${appointmentRequestStatusUpdateInfo.appointmentDate} at ${appointmentRequestStatusUpdateInfo.appointmentTime} 
+          <p>Unfortunately your appointment :  ${appointmentRequestStatusUpdateInfo._id}
+          on ${appointmentRequestStatusUpdateInfo.appointmentDate} at ${appointmentRequestStatusUpdateInfo.appointmentTime}
           has been cancelled. please rebook again</p>
+          <p> Clinic Address</p>
+          <p> ${appointmentRequestStatusUpdateInfo.requestedTo.clinicAddress.streetAddress}</p>
+          <p> ${appointmentRequestStatusUpdateInfo.requestedTo.clinicAddress.city}</p>
+          <p> ${appointmentRequestStatusUpdateInfo.requestedTo.clinicAddress.province}</p>
+          <p> ${appointmentRequestStatusUpdateInfo.requestedTo.clinicAddress.postalCode}</p>
+          <p> ${appointmentRequestStatusUpdateInfo.requestedTo.clinicAddress.country}</p>
           <p>This email may contain sensitive information</p>
           <p>${process.env.CLIENT_URL}/</p>
           `,
     };
     sendEmailWithNodemailer(req, res, emailData);
+    appointmentRequestStatusUpdateInfo.requestedBy = undefined;
+    appointmentRequestStatusUpdateInfo.requestedFor = undefined;
+    appointmentRequestStatusUpdateInfo.requestedTo = undefined;
     return res.status(200).json({
       message: "Appointment Rejected",
-      data: appointmentRequestStatusUpdateInfo,
+      appointmentRequestStatusUpdateInfo,
     });
   }
 });
