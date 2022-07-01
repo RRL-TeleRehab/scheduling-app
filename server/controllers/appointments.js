@@ -10,6 +10,7 @@ const { sendEmailWithNodemailer } = require("../helpers/email");
 const Patient = require("../models/patient");
 const Availability = require("../models/availability");
 const { response } = require("express");
+var mongoose = require("mongoose");
 
 // @description :  Get Appointments of a clinician - pending, rejected or accepted
 // @route GET /api/request-appointment
@@ -148,12 +149,185 @@ exports.updateAppointmentRequest = asyncHandler(async (req, res, next) => {
     // @Case1: Appointment request accepted
     // when an appointment status is changed to accepted by Hub clinician,
     // a record update in requestedAppointment with status as 'Accepted'
-    //  new record in requestedAppointmentHistory with status as 'Accepted'
+    // a new record in requestedAppointmentHistory with status as 'Accepted'
+    const appointmentRequestStatusUpdateInfo = await requestedAppointment
+      .findOneAndUpdate(
+        { _id: req.params.appointmentId },
+        { status: req.body.status },
+        { new: true }
+      )
+      .populate([
+        {
+          path: "requestedBy",
+          model: "User",
+          select: "firstName lastName email clinicContact clinicAddress",
+        },
+        {
+          path: "requestedTo",
+          model: "User",
+          select: "firstName lastName email clinicContact clinicAddress",
+        },
+        {
+          path: "requestedFor",
+          model: "Patient",
+          select: "firstName lastName email",
+        },
+      ]);
+
+    if (!appointmentRequestStatusUpdateInfo) {
+      return res.status(404).json({
+        message: `No appointment found with Id ${req.params.appointmentId}`,
+      });
+    }
+
+    const appointmentRequestHistoryUpdateData = {
+      requestedBy: appointmentRequestStatusUpdateInfo.requestedBy,
+      requestedFor: appointmentRequestStatusUpdateInfo.requestedFor,
+      requestedTo: appointmentRequestStatusUpdateInfo.requestedTo,
+      status: appointmentRequestStatusUpdateInfo.status,
+      appointmentDate: appointmentRequestStatusUpdateInfo.appointmentDate,
+      appointmentTime: appointmentRequestStatusUpdateInfo.appointmentTime,
+    };
+    const appointmentRequestHistoryUpdate =
+      await requestedAppointmentHistory.create(
+        appointmentRequestHistoryUpdateData
+      );
+
     // A new record in appointments 'active'
     // a new record in appointmentsHistory with status 'active'
+    const appointmentConfirmationData = {
+      requestedBy: appointmentRequestStatusUpdateInfo.requestedBy,
+      requestedFor: appointmentRequestStatusUpdateInfo.requestedFor,
+      requestedTo: appointmentRequestStatusUpdateInfo.requestedTo,
+      appointmentDate: appointmentRequestStatusUpdateInfo.appointmentDate,
+      appointmentTime: appointmentRequestStatusUpdateInfo.appointmentTime,
+    };
+    //use findOneAndUpdate to avoid the duplication
+    const confirmedAppointment = await appointments.create(
+      appointmentConfirmationData
+    );
+    const appointmentConfirmationDataHistory = {
+      requestedBy: appointmentRequestStatusUpdateInfo.requestedBy,
+      requestedFor: appointmentRequestStatusUpdateInfo.requestedFor,
+      requestedTo: appointmentRequestStatusUpdateInfo.requestedTo,
+      appointmentDate: appointmentRequestStatusUpdateInfo.appointmentDate,
+      appointmentTime: appointmentRequestStatusUpdateInfo.appointmentTime,
+    };
+    const confirmedAppointmentHistory = await appointmentsHistory.create(
+      appointmentConfirmationDataHistory
+    );
+
+    // send email confirmation for the approved Appointment
+
+    const approvedEmailData = {
+      from: process.env.EMAIL_FROM,
+      to: [
+        appointmentRequestStatusUpdateInfo.requestedBy.email,
+        appointmentRequestStatusUpdateInfo.requestedFor.email,
+      ],
+      subject: `Thank you for choosing PROMOTE. Appointment confirmed by ${appointmentRequestStatusUpdateInfo.requestedTo.firstName} ${appointmentRequestStatusUpdateInfo.requestedTo.lastName}`,
+      html: `
+          <p>Your appointment with ID:  ${appointmentRequestStatusUpdateInfo._id}
+          on ${appointmentRequestStatusUpdateInfo.appointmentDate} at ${appointmentRequestStatusUpdateInfo.appointmentTime} 
+          has been confirmed. You are all set to meet your doctor. </p>
+          <p>Patient Details</p>
+          <h6>${appointmentRequestStatusUpdateInfo.requestedFor.firstName}</h6>
+          <h6>${appointmentRequestStatusUpdateInfo.requestedFor.lastName}</h6>
+          <h6>${appointmentRequestStatusUpdateInfo.requestedFor.email}</h6>
+          <p> Clinic Address</p>
+          <p> ${appointmentRequestStatusUpdateInfo.requestedTo.clinicAddress.streetAddress}</p>
+          <p> ${appointmentRequestStatusUpdateInfo.requestedTo.clinicAddress.city}</p>
+          <p> ${appointmentRequestStatusUpdateInfo.requestedTo.clinicAddress.province}</p>
+          <p> ${appointmentRequestStatusUpdateInfo.requestedTo.clinicAddress.postalCode}</p>
+          <p> ${appointmentRequestStatusUpdateInfo.requestedTo.clinicAddress.country}</p>
+          <p>This email may contain sensitive information</p>
+          <p>${process.env.CLIENT_URL}/</p>
+          `,
+    };
+    sendEmailWithNodemailer(req, res, approvedEmailData);
+
     // update the availability of the Hub Clinician for the requested appointment time and date
+    const clinicianAvailabilitySlotUpdate = await Availability.updateOne(
+      {
+        clinicianId: appointmentRequestStatusUpdateInfo.requestedTo,
+        availability: {
+          $elemMatch: {
+            date: new Date(appointmentRequestStatusUpdateInfo.appointmentDate),
+            "slots.time": appointmentRequestStatusUpdateInfo.appointmentTime,
+          },
+        },
+      },
+      {
+        $set: {
+          "availability.$[outer].slots.$[inner].isAvailable": false,
+        },
+      },
+      {
+        arrayFilters: [
+          {
+            "outer.date": new Date(
+              appointmentRequestStatusUpdateInfo.appointmentDate
+            ),
+          },
+          { "inner.time": appointmentRequestStatusUpdateInfo.appointmentTime },
+        ],
+      }
+    );
+
     // cancel other appointment requests for the requested appointment time and send an email to the cancelled appointment Spoke Clinicians
-    // send email to requestedBy, requestedFor and requestedTo about appointment confirmation
+    const pendingRequestedAppointments = await requestedAppointment
+      .find({
+        requestedTo: appointmentRequestStatusUpdateInfo.requestedTo,
+        appointmentDate: appointmentRequestStatusUpdateInfo.appointmentDate,
+        appointmentTime: appointmentRequestStatusUpdateInfo.appointmentTime,
+        status: "pending",
+      })
+      .populate([
+        {
+          path: "requestedBy",
+          model: "User",
+          select: "firstName lastName email clinicContact clinicAddress",
+        },
+        {
+          path: "requestedTo",
+          model: "User",
+          select: "firstName lastName email clinicContact clinicAddress",
+        },
+        {
+          path: "requestedFor",
+          model: "Patient",
+          select: "firstName lastName email",
+        },
+      ]);
+
+    // send email to Spoke Clinician and patient about the cancellation of the request
+    pendingRequestedAppointments.map((appointment) => {
+      const rejectionEmailData = {
+        from: process.env.EMAIL_FROM,
+        to: [appointment.requestedBy.email, appointment.requestedFor.email],
+        subject: `Thank you for choosing PROMOTE. Appointment Cancelled by ${appointment.requestedTo.firstName} ${appointment.requestedTo.lastName}`,
+        html: `
+            <p>Unfortunately your appointment:  ${appointment._id}
+            on ${appointment.appointmentDate} at ${appointment.appointmentTime}
+            has been cancelled. please rebook again</p>
+            <p>Patient Details</p>
+            <h6>${appointment.requestedFor.firstName}</h6>
+            <h6>${appointment.requestedFor.lastName}</h6>
+            <h6>${appointment.requestedFor.email}</h6>
+            <p> Clinic Address</p>
+            <p> ${appointment.requestedTo.clinicAddress.streetAddress}</p>
+            <p> ${appointment.requestedTo.clinicAddress.city}</p>
+            <p> ${appointment.requestedTo.clinicAddress.province}</p>
+            <p> ${appointment.requestedTo.clinicAddress.postalCode}</p>
+            <p> ${appointment.requestedTo.clinicAddress.country}</p>
+            <p>This email may contain sensitive information</p>
+            <p>${process.env.CLIENT_URL}/</p>
+            `,
+      };
+      sendEmailWithNodemailer(req, res, rejectionEmailData);
+    });
+
+    return res.status(200).json("Appointment has been approved");
   } else {
     // @Case2: Appointment request rejected
     // when an appointment status is changed to rejected by Hub clinician,
@@ -229,7 +403,7 @@ exports.updateAppointmentRequest = asyncHandler(async (req, res, next) => {
           <p>${process.env.CLIENT_URL}/</p>
           `,
     };
-    sendEmailWithNodemailer(req, res, emailData);
+    // sendEmailWithNodemailer(req, res, emailData);
     appointmentRequestStatusUpdateInfo.requestedBy = undefined;
     appointmentRequestStatusUpdateInfo.requestedFor = undefined;
     appointmentRequestStatusUpdateInfo.requestedTo = undefined;
