@@ -403,7 +403,7 @@ exports.updateAppointmentRequest = asyncHandler(async (req, res, next) => {
           <p>${process.env.CLIENT_URL}/</p>
           `,
     };
-    // sendEmailWithNodemailer(req, res, emailData);
+    sendEmailWithNodemailer(req, res, emailData);
     appointmentRequestStatusUpdateInfo.requestedBy = undefined;
     appointmentRequestStatusUpdateInfo.requestedFor = undefined;
     appointmentRequestStatusUpdateInfo.requestedTo = undefined;
