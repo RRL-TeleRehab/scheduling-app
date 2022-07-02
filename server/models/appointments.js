@@ -91,6 +91,10 @@ const appointmentsSchema = new mongoose.Schema(
       required: true,
       ref: "Patient",
     },
+    status: {
+      type: String,
+      default: "active",
+    },
     appointmentDate: {
       type: Date,
       required: true,

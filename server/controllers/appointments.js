@@ -9,8 +9,6 @@ const ErrorResponse = require("../helpers/ErrorResponse");
 const { sendEmailWithNodemailer } = require("../helpers/email");
 const Patient = require("../models/patient");
 const Availability = require("../models/availability");
-const { response } = require("express");
-var mongoose = require("mongoose");
 
 // @description :  Get Appointments of a clinician - pending, rejected or accepted
 // @route GET /api/request-appointment
@@ -412,4 +410,34 @@ exports.updateAppointmentRequest = asyncHandler(async (req, res, next) => {
       appointmentRequestStatusUpdateInfo,
     });
   }
+});
+
+exports.getHubConfirmedAppointments = asyncHandler(async (req, res, next) => {
+  const userId = req.user._id;
+  const confirmedBookings = await appointments
+    .find({ requestedTo: userId })
+    .populate([
+      {
+        path: "requestedBy",
+        model: "User",
+        select:
+          "firstName lastName email profilePhoto gender clinicContact clinicName",
+      },
+      {
+        path: "requestedTo",
+        model: "User",
+        select:
+          "firstName lastName email profilePhoto gender clinicContact clinicName",
+      },
+      {
+        path: "requestedFor",
+        model: "Patient",
+        select: "firstName lastName email",
+      },
+    ]);
+  if (!confirmedBookings)
+    return res.status(404).json({
+      message: "No bookings found",
+    });
+  res.status(200).json({ confirmedBookings });
 });
