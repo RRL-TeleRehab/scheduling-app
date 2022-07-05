@@ -9,6 +9,7 @@ const ErrorResponse = require("../helpers/ErrorResponse");
 const { sendEmailWithNodemailer } = require("../helpers/email");
 const Patient = require("../models/patient");
 const Availability = require("../models/availability");
+const User = require("../models/user");
 
 // @description :  Get Appointments of a clinician - pending, rejected or accepted
 // @route GET /api/request-appointment
@@ -414,65 +415,37 @@ exports.updateAppointmentRequest = asyncHandler(async (req, res, next) => {
 
 // @description :  Confirmed appointments of HUB Clinician
 // @route GET /hub/bookings
-// @access Hub Clinician
+// @access Hub Clinician and Spoke Clinician
 
-exports.getHubConfirmedAppointments = asyncHandler(async (req, res, next) => {
+exports.getConfirmedAppointments = asyncHandler(async (req, res, next) => {
   const userId = req.user._id;
-  const confirmedBookings = await appointments
-    .find({ requestedTo: userId })
-    .populate([
-      {
-        path: "requestedBy",
-        model: "User",
-        select:
-          "firstName lastName email profilePhoto gender clinicContact clinicName",
-      },
-      {
-        path: "requestedTo",
-        model: "User",
-        select:
-          "firstName lastName email profilePhoto gender clinicContact clinicName",
-      },
-      {
-        path: "requestedFor",
-        model: "Patient",
-        select: "firstName lastName email",
-      },
-    ]);
-  if (!confirmedBookings)
-    return res.status(404).json({
-      message: "No bookings found",
-    });
-  res.status(200).json({ confirmedBookings });
-});
-
-// @description :  Confirmed appointments of Spoke Clinician
-// @route GET /spoke/bookings
-// @access Spoke Clinician
-
-exports.getSpokeConfirmedAppointments = asyncHandler(async (req, res, next) => {
-  const userId = req.user._id;
-  const confirmedBookings = await appointments
-    .find({ requestedBy: userId })
-    .populate([
-      {
-        path: "requestedBy",
-        model: "User",
-        select:
-          "firstName lastName email profilePhoto gender clinicContact clinicName",
-      },
-      {
-        path: "requestedTo",
-        model: "User",
-        select:
-          "firstName lastName email profilePhoto gender clinicContact clinicName",
-      },
-      {
-        path: "requestedFor",
-        model: "Patient",
-        select: "firstName lastName email",
-      },
-    ]);
+  const { role } = await User.findById(req.user._id);
+  let query;
+  if (role === "hub") {
+    query = { requestedTo: userId };
+  }
+  if (role === "spoke") {
+    query = { requestedBy: userId };
+  }
+  const confirmedBookings = await appointments.find(query).populate([
+    {
+      path: "requestedBy",
+      model: "User",
+      select:
+        "firstName lastName email profilePhoto gender clinicContact clinicName",
+    },
+    {
+      path: "requestedTo",
+      model: "User",
+      select:
+        "firstName lastName email profilePhoto gender clinicContact clinicName",
+    },
+    {
+      path: "requestedFor",
+      model: "Patient",
+      select: "firstName lastName email",
+    },
+  ]);
   if (!confirmedBookings)
     return res.status(404).json({
       message: "No bookings found",
