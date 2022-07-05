@@ -8,6 +8,7 @@ const {
   getAppointmentsRequestedToHubClinician,
   getRequestedAppointmentById,
   getHubConfirmedAppointments,
+  getSpokeConfirmedAppointments,
 } = require("../controllers/appointments");
 
 // import middleware
@@ -33,6 +34,13 @@ router.get(
   requireSignIn,
   hubClinicianMiddleware,
   getHubConfirmedAppointments
+);
+
+router.get(
+  "/spoke/bookings",
+  requireSignIn,
+  spokeClinicianMiddleware,
+  getSpokeConfirmedAppointments
 );
 
 router.get(

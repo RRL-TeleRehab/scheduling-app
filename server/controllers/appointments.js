@@ -412,10 +412,48 @@ exports.updateAppointmentRequest = asyncHandler(async (req, res, next) => {
   }
 });
 
+// @description :  Confirmed appointments of HUB Clinician
+// @route GET /hub/bookings
+// @access Hub Clinician
+
 exports.getHubConfirmedAppointments = asyncHandler(async (req, res, next) => {
   const userId = req.user._id;
   const confirmedBookings = await appointments
     .find({ requestedTo: userId })
+    .populate([
+      {
+        path: "requestedBy",
+        model: "User",
+        select:
+          "firstName lastName email profilePhoto gender clinicContact clinicName",
+      },
+      {
+        path: "requestedTo",
+        model: "User",
+        select:
+          "firstName lastName email profilePhoto gender clinicContact clinicName",
+      },
+      {
+        path: "requestedFor",
+        model: "Patient",
+        select: "firstName lastName email",
+      },
+    ]);
+  if (!confirmedBookings)
+    return res.status(404).json({
+      message: "No bookings found",
+    });
+  res.status(200).json({ confirmedBookings });
+});
+
+// @description :  Confirmed appointments of Spoke Clinician
+// @route GET /spoke/bookings
+// @access Spoke Clinician
+
+exports.getSpokeConfirmedAppointments = asyncHandler(async (req, res, next) => {
+  const userId = req.user._id;
+  const confirmedBookings = await appointments
+    .find({ requestedBy: userId })
     .populate([
       {
         path: "requestedBy",

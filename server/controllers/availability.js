@@ -2,11 +2,17 @@ const Availability = require("../models/availability");
 const asyncHandler = require("../helpers/async");
 var mongoose = require("mongoose");
 
-// @description :  Create and update availability for Hub Clinician
+// @description :  Create, update and delete availability for Hub Clinician
 // @route POST /api/availability
 // @access Hub Clinician
 
 exports.createAvailability = asyncHandler(async (req, res, next) => {
+  // use cases to handle:
+  // 1) Update or delete availability - if a time slot is updated or deleted email should be sent to Spoke clinicians and patients about the current status
+  // of the appointment,
+
+  // 2) Check if there are any confirmed appointments and send email for rescheduling
+
   const { clinicianId, availability } = req.body;
   const { date, slots } = availability[0];
   console.log(slots);
