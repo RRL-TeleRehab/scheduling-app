@@ -3,6 +3,9 @@ const jwt = require("jsonwebtoken");
 const { sendEmailWithNodemailer } = require("../helpers/email");
 const expressJWT = require("express-jwt");
 const _ = require("lodash");
+const handlebars = require("handlebars");
+const fs = require("fs");
+const path = require("path");
 
 exports.signup = (req, res, next) => {
   const { firstName, lastName, email, password, role } = req.body;
@@ -21,20 +24,26 @@ exports.signup = (req, res, next) => {
       { expiresIn: "15m" }
     );
 
-    console.log(req.body);
-
     // Email content to verify the account
+
+    const emailTemplate = fs.readFileSync(
+      path.join(__dirname, "../emailTemplates/signUp.hbs"),
+      "utf8"
+    );
+    const template = handlebars.compile(emailTemplate);
+    const htmlToSend = template({ message: token });
+
     const emailData = {
       from: process.env.EMAIL_FROM,
       to: email,
       subject: `Thank you for choosing PROMOTE. Please find the account activation link`,
       html: `
-        <p>Please use the following link to activate your account</p>
-        <p>${process.env.CLIENT_URL}/auth/activate/${token}</p>
-        <hr />
-        <p>This email may contain sensitive information</p>
-        <p>${process.env.CLIENT_URL}/</p>
-        `,
+      <p>Please use the following link to activate your account</p>
+      <p>${process.env.CLIENT_URL}/auth/activate/${token}</p>
+      <hr />
+      <p>This email may contain sensitive information</p>
+      <p>${process.env.CLIENT_URL}/</p>
+      `,
     };
     // send Email to the user
     sendEmailWithNodemailer(req, res, emailData);
