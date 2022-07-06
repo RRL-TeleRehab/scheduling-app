@@ -8,6 +8,10 @@ const {
   appointments,
   appointmentsHistory,
 } = require("../models/appointments");
+const {
+  findByIdAndUpdate,
+  findOneAndUpdate,
+} = require("../models/availability");
 
 // @description :  Create, update and delete availability for Hub Clinician
 // @route POST /api/availability
@@ -89,78 +93,74 @@ exports.createAvailability = asyncHandler(async (req, res, next) => {
       let removedTimeSlots = currentAvailableSlots.filter(
         (slot) => !toBeUpdatedSlots.includes(slot)
       );
-      // console.log("removedTimeSlots", removedTimeSlots);
+      console.log("removedTimeSlots", removedTimeSlots);
 
       // Check pending appointments requested for the removed time slots and update appointment status to rejected or cancelled
       // Add the records to the history of the appointment requested
+      if (removedTimeSlots.length > 0) {
+        const pendingAppointmentRequests = await requestedAppointment
+          .find({
+            requestedTo: clinicianId,
+            status: { $in: ["pending", "accepted"] },
+            appointmentDate: new Date(availability[0].date),
+            appointmentTime: { $in: removedTimeSlots },
+          })
+          .populate([
+            {
+              path: "requestedBy",
+              model: "User",
+              select: "firstName lastName email",
+            },
+            {
+              path: "requestedTo",
+              model: "User",
+              select: "firstName lastName email",
+            },
+            {
+              path: "requestedFor",
+              model: "Patient",
+              select: "firstName lastName email",
+            },
+          ]);
 
-      const pendingAppointmentRequests = await requestedAppointment
-        .find({
-          requestedTo: clinicianId,
-          status: "pending",
-          appointmentDate: new Date(availability[0].date),
-          appointmentTime: { $in: removedTimeSlots },
-        })
-        .populate([
-          {
-            path: "requestedBy",
-            model: "User",
-            select: "firstName lastName email",
-          },
-          {
-            path: "requestedTo",
-            model: "User",
-            select: "firstName lastName email",
-          },
-          {
-            path: "requestedFor",
-            model: "Patient",
-            select: "firstName lastName email",
-          },
-        ]);
+        console.log("pendingAppointmentRequests", pendingAppointmentRequests);
 
-      if (pendingAppointmentRequests.length > 0) {
-        // send email to the removed slots pending request Appointments
-        try {
-          pendingAppointmentRequests.map(async (appointment) => {
-            // update old requested Appointment status to rejected
+        if (pendingAppointmentRequests.length > 0) {
+          // send email to the removed slots pending request Appointments
+          try {
+            pendingAppointmentRequests.map(async (appointment) => {
+              // update old requested Appointment status to rejected
 
-            const updatePendingRequestedAppointment =
-              await requestedAppointment.updateOne(
-                {
-                  requestedTo: clinicianId,
-                  status: "pending",
-                  appointmentDate: new Date(availability[0].date),
+              const updateRequestAppointment =
+                await requestedAppointment.updateOne(
+                  {
+                    requestedTo: clinicianId,
+                    status: { $in: ["pending", "accepted"] },
+                    appointmentDate: new Date(availability[0].date),
+                    appointmentTime: appointment.appointmentTime,
+                  },
+                  { $set: { status: "rejected" } }
+                );
+
+              const updateRequestedAppointmentHistory =
+                await requestedAppointmentHistory.create({
+                  requestedBy: appointment.requestedBy._id,
+                  requestedFor: appointment.requestedFor._id,
+                  requestedTo: appointment.requestedTo._id,
+                  status: "rejected",
+                  appointmentDate: appointment.appointmentDate,
                   appointmentTime: appointment.appointmentTime,
-                },
-                { $set: { status: "rejected" } }
-              );
+                });
 
-            if (!updatePendingRequestedAppointment) {
-              return res
-                .status(400)
-                .json({ message: "Unable to appointment status" });
-            }
-
-            const updatePendingRequestedAppointmentHistory =
-              await requestedAppointmentHistory.create({
-                requestedBy: appointment.requestedBy._id,
-                requestedFor: appointment.requestedFor._id,
-                requestedTo: appointment.requestedTo._id,
-                status: "rejected",
-                appointmentDate: appointment.appointmentDate,
-                appointmentTime: appointment.appointmentTime,
-              });
-
-            const approvedEmailData = {
-              from: process.env.EMAIL_FROM,
-              to: [
-                appointment.requestedBy.email,
-                appointment.requestedFor.email,
-              ],
-              subject: `Thank you for choosing PROMOTE. Appointment with ${appointment.requestedTo.firstName} ${appointment.requestedTo.lastName} has been 
-                      rejected`,
-              html: `
+              let rejectEmailData = {
+                from: process.env.EMAIL_FROM,
+                to: [
+                  appointment.requestedBy.email,
+                  appointment.requestedFor.email,
+                ],
+                subject: `Thank you for choosing PROMOTE. Appointment request with ${appointment.requestedTo.firstName} ${appointment.requestedTo.lastName} 
+                has been rejected due to unavailability of the clinician. please select the next available time slot.`,
+                html: `
                 <p> Appointment Request ID:  ${appointment._id}
                 on ${appointment.appointmentDate} at ${appointment.appointmentTime}
                 has been rejected. Please select next available date </p>
@@ -171,19 +171,98 @@ exports.createAvailability = asyncHandler(async (req, res, next) => {
                 <p>This email may contain sensitive information</p>
                 <p>${process.env.CLIENT_URL}/</p>
                 `,
-            };
-            sendEmailWithNodemailer(req, res, approvedEmailData);
-          });
-        } catch (err) {
-          console.log(err);
-          return res
-            .status(400)
-            .json({ message: "Error updating availability" });
+              };
+              sendEmailWithNodemailer(req, res, rejectEmailData);
+            });
+          } catch (err) {
+            console.log(err);
+            return res
+              .status(400)
+              .json({ message: "Error updating availability" });
+          }
+        }
+
+        // Check confirmed active appointments for the removed time slots and update appointment status cancelled
+        // Add the records to the history of the appointment confirmed
+        const activeAppointmentBookings = await appointments
+          .find({
+            requestedTo: clinicianId,
+            status: "active",
+            appointmentDate: new Date(availability[0].date),
+            appointmentTime: { $in: removedTimeSlots },
+          })
+          .populate([
+            {
+              path: "requestedBy",
+              model: "User",
+              select: "firstName lastName email",
+            },
+            {
+              path: "requestedTo",
+              model: "User",
+              select: "firstName lastName email",
+            },
+            {
+              path: "requestedFor",
+              model: "Patient",
+              select: "firstName lastName email",
+            },
+          ]);
+
+        console.log("activeAppointmentBookings", activeAppointmentBookings);
+
+        if (activeAppointmentBookings.length > 0) {
+          try {
+            activeAppointmentBookings.map(async (appointment) => {
+              //delete appointment Information from the appointment collection
+              const removeActiveAppointment = await appointments.deleteOne({
+                requestedTo: appointment.requestedTo,
+                status: "active",
+                appointmentDate: new Date(availability[0].date),
+                appointmentTime: appointment.appointmentTime,
+              });
+              // create a new record in appointmentsHistory with status cancelled
+              const createAppointmentHistory = await appointmentsHistory.create(
+                {
+                  requestedBy: appointment.requestedBy._id,
+                  requestedFor: appointment.requestedFor._id,
+                  requestedTo: appointment.requestedTo._id,
+                  status: "cancelled",
+                  appointmentDate: appointment.appointmentDate,
+                  appointmentTime: appointment.appointmentTime,
+                }
+              );
+
+              const cancelledEmailData = {
+                from: process.env.EMAIL_FROM,
+                to: [
+                  appointment.requestedBy.email,
+                  appointment.requestedFor.email,
+                ],
+                subject: `Thank you for choosing PROMOTE. Appointment with ${appointment.requestedTo.firstName} ${appointment.requestedTo.lastName} has been 
+                      cancelled due to the clinician availability`,
+                html: `
+                <p> Appointment Confirmation ID:  ${appointment._id}
+                on ${appointment.appointmentDate} at ${appointment.appointmentTime}
+                has been Cancelled. Please select next available date </p>
+                <p>Patient Details</p>
+                <h6>${appointment.requestedFor.firstName}</h6>
+                <h6>${appointment.requestedFor.lastName}</h6>
+                <h6>${appointment.requestedFor.email}</h6>
+                <p>This email may contain sensitive information</p>
+                <p>${process.env.CLIENT_URL}/</p>
+                `,
+              };
+              sendEmailWithNodemailer(req, res, cancelledEmailData);
+            });
+          } catch (error) {
+            console.log("error", error);
+            return res
+              .status(400)
+              .json({ message: "Error cancelling appointments" });
+          }
         }
       }
-
-      // Check confirmed active appointments for the removed time slots and update appointment status cancelled
-      // Add the records to the history of the appointment confirmed
 
       clinicianAvailability = await Availability.updateOne(
         {
