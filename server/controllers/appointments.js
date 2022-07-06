@@ -108,7 +108,8 @@ exports.createAppointmentRequest = asyncHandler(async (req, res, next) => {
   // check if patient Already exists otherwise add patient data to DB
   const patientInfo = await Patient.findOneAndUpdate(
     { email: patientEmail },
-    { firstName: patientFirstName, lastName: patientLastName }
+    { firstName: patientFirstName, lastName: patientLastName },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
   );
   if (!patientInfo) {
     const createNewPatientInfo = await Patient.create({
@@ -120,7 +121,7 @@ exports.createAppointmentRequest = asyncHandler(async (req, res, next) => {
     patientData = createNewPatientInfo;
   }
   patientData = patientInfo;
-  console.log(patientData._id);
+  console.log(patientData);
 
   const appointmentData = {
     requestedBy,
@@ -273,7 +274,7 @@ exports.updateAppointmentRequest = asyncHandler(async (req, res, next) => {
       }
     );
 
-    // cancel other appointment requests for the requested appointment time and send an email to the cancelled appointment Spoke Clinicians
+    // cancel other appointment requests for the requested appointment time --> update status and send an email to the cancelled appointment Spoke Clinicians
     const pendingRequestedAppointments = await requestedAppointment
       .find({
         requestedTo: appointmentRequestStatusUpdateInfo.requestedTo,
@@ -299,8 +300,19 @@ exports.updateAppointmentRequest = asyncHandler(async (req, res, next) => {
         },
       ]);
 
+    console.log(pendingRequestedAppointments);
     // send email to Spoke Clinician and patient about the cancellation of the request
-    pendingRequestedAppointments.map((appointment) => {
+    pendingRequestedAppointments.map(async (appointment) => {
+      const updateRequestAppointment = await requestedAppointment.updateOne(
+        {
+          requestedBy: appointment.requestedBy._id,
+          requestedTo: appointment.requestedTo._id,
+          status: "pending",
+          appointmentDate: appointment.appointmentDate,
+          appointmentTime: appointment.appointmentTime,
+        },
+        { $set: { status: "rejected" } }
+      );
       const rejectionEmailData = {
         from: process.env.EMAIL_FROM,
         to: [appointment.requestedBy.email, appointment.requestedFor.email],
