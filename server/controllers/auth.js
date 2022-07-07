@@ -25,25 +25,23 @@ exports.signup = (req, res, next) => {
     );
 
     // Email content to verify the account
-
-    const emailTemplate = fs.readFileSync(
-      path.join(__dirname, "../emailTemplates/signUp.hbs"),
-      "utf8"
-    );
-    const template = handlebars.compile(emailTemplate);
-    const htmlToSend = template({ message: token });
+    const signUpMailTemplate = fs
+      .readFileSync(
+        path.join(__dirname, "../emailTemplates/signUp.html"),
+        "utf8"
+      )
+      .toString();
+    const singUpTemplate = handlebars.compile(signUpMailTemplate);
+    const signUpMailContent = singUpTemplate({
+      token: token,
+      application_url: process.env.CLIENT_URL,
+    });
 
     const emailData = {
       from: process.env.EMAIL_FROM,
       to: email,
       subject: `Thank you for choosing PROMOTE. Please find the account activation link`,
-      html: `
-      <p>Please use the following link to activate your account</p>
-      <p>${process.env.CLIENT_URL}/auth/activate/${token}</p>
-      <hr />
-      <p>This email may contain sensitive information</p>
-      <p>${process.env.CLIENT_URL}/</p>
-      `,
+      html: signUpMailContent,
     };
     // send Email to the user
     sendEmailWithNodemailer(req, res, emailData);

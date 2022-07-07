@@ -5,9 +5,10 @@ const router = express.Router();
 const {
   createAppointmentRequest,
   updateAppointmentRequest,
-  getAppointmentsRequestedToHubClinician,
+  getAppointmentsRequested,
   getRequestedAppointmentById,
   getConfirmedAppointments,
+  pendingRequestsByDate,
 } = require("../controllers/appointments");
 
 // import middleware
@@ -24,8 +25,8 @@ const {
 router.get(
   "/request-appointment",
   requireSignIn,
-  hubClinicianMiddleware,
-  getAppointmentsRequestedToHubClinician
+  userMiddleware,
+  getAppointmentsRequested
 );
 
 router.get(
@@ -40,6 +41,13 @@ router.get(
   requireSignIn,
   userMiddleware,
   getRequestedAppointmentById
+);
+
+router.get(
+  "/pending-requests/:clinicianId/:availabilityDate",
+  requireSignIn,
+  hubClinicianMiddleware,
+  pendingRequestsByDate
 );
 
 router.post(

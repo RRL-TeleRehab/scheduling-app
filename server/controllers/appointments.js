@@ -15,41 +15,50 @@ const User = require("../models/user");
 // @route GET /api/request-appointment
 // @access Hub Clinician
 
-exports.getAppointmentsRequestedToHubClinician = asyncHandler(
-  async (req, res, next) => {
-    const userId = req.user._id;
-    const appointments = await requestedAppointment
-      .find({
-        requestedTo: userId,
-        status: { $in: ["pending", "rejected"] },
-      })
-      .sort({ appointmentDate: 1 })
-      .sort({ appointmentTime: 1 })
-      .populate([
-        {
-          path: "requestedBy",
-          model: "User",
-          select: "firstName lastName email profilePhoto",
-        },
-        {
-          path: "requestedTo",
-          model: "User",
-          select: "firstName lastName email profilePhoto",
-        },
-        {
-          path: "requestedFor",
-          model: "Patient",
-          select: "firstName lastName email",
-        },
-      ]);
-    if (!appointments) {
-      return res.status(400).json({
-        message: "No appointment found",
-      });
-    }
-    res.status(200).json({ appointments });
+exports.getAppointmentsRequested = asyncHandler(async (req, res, next) => {
+  const userId = req.user._id;
+  const { role } = await User.findById(userId);
+  console.log(role);
+  let query;
+  if (role === "hub") {
+    query = {
+      requestedTo: userId,
+      status: { $in: ["pending", "rejected"] },
+    };
+  } else {
+    query = {
+      requestedBy: userId,
+      status: { $in: ["pending", "rejected"] },
+    };
   }
-);
+  const appointments = await requestedAppointment
+    .find(query)
+    .sort({ appointmentDate: 1 })
+    .sort({ appointmentTime: 1 })
+    .populate([
+      {
+        path: "requestedBy",
+        model: "User",
+        select: "firstName lastName email profilePhoto",
+      },
+      {
+        path: "requestedTo",
+        model: "User",
+        select: "firstName lastName email profilePhoto",
+      },
+      {
+        path: "requestedFor",
+        model: "Patient",
+        select: "firstName lastName email",
+      },
+    ]);
+  if (!appointments) {
+    return res.status(400).json({
+      message: "No appointment found",
+    });
+  }
+  res.status(200).json({ appointments });
+});
 
 // @description :  Get requested Appointment details by appointmentId
 // @route GET /api/request-appointment/:appointmentId
@@ -463,4 +472,36 @@ exports.getConfirmedAppointments = asyncHandler(async (req, res, next) => {
       message: "No bookings found",
     });
   res.status(200).json({ confirmedBookings });
+});
+
+// @description :  Get pending appointment requests by Date
+// @route GET /pending-requests/:clinicianId/:availabilityDate
+// @access Hub Clinician
+
+exports.pendingRequestsByDate = asyncHandler(async (req, res, next) => {
+  try {
+    const clinicianId = req.params.clinicianId;
+    const availabilityDate = req.params.availabilityDate;
+    const pendingAppointmentRequests = await requestedAppointment.find({
+      requestedTo: clinicianId,
+      appointmentDate: new Date(availabilityDate),
+      status: "pending",
+    });
+    if (!pendingAppointmentRequests) {
+      return next(
+        new ErrorResponse(
+          `No pending appointment requests found on ${availabilityDate}`,
+          404
+        )
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      count: pendingAppointmentRequests.length,
+      pendingAppointmentRequests: pendingAppointmentRequests,
+    });
+  } catch (error) {
+    return res.status(400).json(error);
+  }
 });
