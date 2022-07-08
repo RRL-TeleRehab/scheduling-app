@@ -20,6 +20,7 @@
     "google-auth-library": "^8.1.0",
     "handlebars": "^4.7.7",
     "helmet": "^5.0.2",
+    "http-proxy-middleware": "^2.0.6",
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^4.7.0",
     "mongoose": "^6.2.10",

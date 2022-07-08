@@ -318,6 +318,43 @@ exports.googleLogin = (req, res, next) => {
       if (email_verified) {
         // check if user with the same email already exists in the database
         User.findOne({ email }).exec((err, user) => {
+          if (!user) {
+            return res.status(400).json({
+              error: "Account does not exist. Please register",
+            });
+          }
+          // if user found
+          if (user) {
+            const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+              expiresIn: "7d",
+            });
+            const { email, _id, firstName, lastName, role, profilePhoto } =
+              user;
+            return res.status(200).json({
+              token: token,
+              user: { _id, firstName, lastName, email, role, profilePhoto },
+            });
+          }
+        });
+      } else {
+        return res.status(400).json({
+          error: "Google login failed. Try again later.",
+        });
+      }
+    });
+};
+
+exports.googleRegister = (req, res, next) => {
+  const { idToken } = req.body;
+  client
+    .verifyIdToken({ idToken, audience: process.env.GOOGLE_CLIENT_ID })
+    .then((response) => {
+      const { email_verified, given_name, family_name, picture, email } =
+        response.payload;
+      // check if the google user account email is verified or not
+      if (email_verified) {
+        // check if user with the same email already exists in the database
+        User.findOne({ email }).exec((err, user) => {
           // if user found
           if (user) {
             const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
