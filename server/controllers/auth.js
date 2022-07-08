@@ -6,6 +6,7 @@ const _ = require("lodash");
 const handlebars = require("handlebars");
 const fs = require("fs");
 const path = require("path");
+const { OAuth2Client } = require("google-auth-library");
 
 exports.signup = (req, res, next) => {
   const { firstName, lastName, email, password, role } = req.body;
@@ -121,7 +122,7 @@ exports.signin = (req, res, next) => {
       expiresIn: "7d",
     });
     const { email, _id, firstName, lastName, role, profilePhoto } = user;
-    return res.json({
+    return res.status(200).json({
       token: token,
       user: { _id, firstName, lastName, email, role, profilePhoto },
     });
@@ -302,6 +303,78 @@ exports.resetPassword = (req, res, next) => {
       }
     );
   }
+};
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+exports.googleLogin = (req, res, next) => {
+  const { idToken } = req.body;
+  client
+    .verifyIdToken({ idToken, audience: process.env.GOOGLE_CLIENT_ID })
+    .then((response) => {
+      console.log("google login response", response);
+      const { email_verified, given_name, family_name, picture, email } =
+        response.payload;
+      // check if the google user account email is verified or not
+      if (email_verified) {
+        // check if user with the same email already exists in the database
+        User.findOne({ email }).exec((err, user) => {
+          // if user found
+          if (user) {
+            const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+              expiresIn: "7d",
+            });
+            const { email, _id, firstName, lastName, role, profilePhoto } =
+              user;
+            return res.status(200).json({
+              token: token,
+              user: { _id, firstName, lastName, email, role, profilePhoto },
+            });
+          }
+          // if user not found
+          else {
+            // create a new user account
+            let password = email + process.env.JWT_SECRET;
+            let username =
+              given_name.charAt(0).toUpperCase() +
+              family_name +
+              Math.floor(1000 + Math.random() * 1000);
+            user = new User({
+              firstName: given_name,
+              lastName: family_name,
+              password: password,
+              email: email,
+              username: username,
+              profilePhoto: picture,
+            });
+            user.save((err, data) => {
+              if (err) {
+                console.log("Error google login on user save", err);
+                return res.status(400).json({
+                  error: "User signup failed with google",
+                });
+              }
+              const token = jwt.sign(
+                { _id: data._id },
+                process.env.JWT_SECRET,
+                {
+                  expiresIn: "7d",
+                }
+              );
+              const { email, _id, firstName, lastName, role, profilePhoto } =
+                data;
+              return res.status(200).json({
+                token: token,
+                user: { _id, firstName, lastName, email, role, profilePhoto },
+              });
+            });
+          }
+        });
+      } else {
+        return res.status(400).json({
+          error: "Google login failed. Try again later.",
+        });
+      }
+    });
 };
 
 // Future work

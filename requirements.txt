@@ -18,3 +18,4 @@ path:'posts',
 
 1) When an appointment is rescheduled or cancelled, update the user availability time slot status to available based on the validity of the time.
 2) Write cron job to reject all the previous day pending requests appointments.
+3) Login with google
