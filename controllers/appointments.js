@@ -101,7 +101,7 @@ exports.getRequestedAppointmentById = asyncHandler(async (req, res, next) => {
 // @access Spoke Clinician
 exports.createAppointmentRequest = asyncHandler(async (req, res, next) => {
   // when an appointment request is sent by spoke clinician, a record in both requestedAppointment and requestedAppointmentHistory is added
-
+  console.log(req.body);
   const {
     requestedBy,
     requestedTo,
@@ -130,8 +130,6 @@ exports.createAppointmentRequest = asyncHandler(async (req, res, next) => {
     patientData = createNewPatientInfo;
   }
   patientData = patientInfo;
-  console.log(patientData);
-
   const appointmentData = {
     requestedBy,
     requestedFor: patientData._id,
@@ -145,8 +143,7 @@ exports.createAppointmentRequest = asyncHandler(async (req, res, next) => {
     appointmentData
   );
   res.status(200).json({
-    message: "Appointment requested",
-    appointmentRequest,
+    message: "Appointment requested successfully",
   });
 });
 
