@@ -34,8 +34,8 @@ const userSchema = new mongoose.Schema(
     },
     title: {
       type: String,
-      default: " ",
-      enum: [" ", "Dr", "Mr", "Mrs", "Ms", "Miss", "Mx", "Rev", "Sir"],
+      default: "Dr",
+      enum: ["Dr", "Mr", "Mrs", "Ms", "Miss", "Mx", "Rev", "Sir"],
     },
     clinicContact: {
       type: String,
@@ -45,7 +45,7 @@ const userSchema = new mongoose.Schema(
     aboutClinician: {
       type: String,
       trim: true,
-      max: 200,
+      max: 300,
       default: "",
     },
     profilePhoto: {
@@ -61,10 +61,11 @@ const userSchema = new mongoose.Schema(
     salt: {
       type: String,
     },
-    yearOfBirth: {
+    dateOfBirth: {
       type: String,
       default: "",
     },
+    // format MM-DD-YYYY
     yearsOfExperience: {
       type: Number,
       default: 0,
@@ -87,7 +88,8 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
     clinicAddress: {
-      streetAddress: { type: String, default: "" },
+      address1: { type: String, default: "" },
+      address2: { type: String, default: "" },
       city: { type: String, default: "" },
       postalCode: { type: String, default: "" },
       province: { type: String, default: "" },
