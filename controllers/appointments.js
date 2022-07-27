@@ -18,7 +18,6 @@ const User = require("../models/user");
 exports.getAppointmentsRequested = asyncHandler(async (req, res, next) => {
   const userId = req.user._id;
   const { role } = await User.findById(userId);
-  console.log(role);
   let query;
   if (role === "hub") {
     query = {
@@ -62,10 +61,47 @@ exports.getAppointmentsRequested = asyncHandler(async (req, res, next) => {
 
 // @description :  Get requested Appointment details by appointmentId
 // @route GET /api/request-appointment/:appointmentId
-// @access Hub Clinician
+// @access Hub and Spoke Clinician
 exports.getRequestedAppointmentById = asyncHandler(async (req, res, next) => {
   const appointmentId = req.params.appointmentId;
   requestedAppointment
+    .findById(appointmentId)
+    .populate([
+      {
+        path: "requestedBy",
+        model: "User",
+        select:
+          "firstName lastName email profilePhoto gender clinicContact clinicName",
+      },
+      {
+        path: "requestedTo",
+        model: "User",
+        select:
+          "firstName lastName email profilePhoto gender clinicContact clinicName",
+      },
+      {
+        path: "requestedFor",
+        model: "Patient",
+        select: "firstName lastName email",
+      },
+    ])
+    .exec((err, appointmentInfo) => {
+      if (err || !appointmentInfo) {
+        return res.status(400).json({
+          error: "appointment details not found",
+        });
+      }
+      res.status(200).json(appointmentInfo);
+    });
+});
+
+// @description :  Get Confirmed Appointment details by appointmentId
+// @route GET /api/confirm-appointment/:appointmentId
+// @access Hub and Spoke Clinician
+
+exports.getConfirmedAppointmentById = asyncHandler(async (req, res, next) => {
+  const appointmentId = req.params.appointmentId;
+  appointments
     .findById(appointmentId)
     .populate([
       {
