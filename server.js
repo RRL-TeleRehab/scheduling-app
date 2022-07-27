@@ -23,13 +23,17 @@ const storyRoutes = require("./routes/story");
 const availabilityRoutes = require("./routes/availability");
 const appointmentsRoutes = require("./routes/appointments");
 
-// Useful if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
+// Useful if you're behind a reverse proxy (Heroku, Blue mix, AWS ELB, Nginx, etc)
 // It shows the real origin IP in the heroku or Cloudwatch logs
 app.enable("trust proxy");
 
 // app middleware
 app.use(morgan("combined", { stream: winston.stream }));
-app.use(morgan("dev"));
+app.use(
+  morgan(
+    ':remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"'
+  )
+);
 
 // Enable Cross Origin Resource Sharing to all origins by default
 app.use(cors());
@@ -44,12 +48,9 @@ app.use(bodyParser.json());
 if (process.env.NODE_ENV === "development") {
   app.use(
     cors({
-      origin:
-        `http://localhost:3000` ||
-        `http://localhost:3001` ||
-        process.env.CLIENT_URL,
+      origin: `http://localhost:3000` || process.env.CLIENT_URL,
     })
-  ); // allow all requests from all domains
+  ); // allow all requests from particular origins
 }
 
 // middleware
