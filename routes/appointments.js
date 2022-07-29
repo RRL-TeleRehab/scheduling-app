@@ -9,6 +9,7 @@ const {
   getRequestedAppointmentById,
   getConfirmedAppointmentById,
   getConfirmedAppointments,
+  updateConfirmedAppointments,
   pendingRequestsByDate,
 } = require("../controllers/appointments");
 
@@ -35,6 +36,13 @@ router.get(
   requireSignIn,
   userMiddleware,
   getConfirmedAppointments
+);
+
+router.put(
+  "/confirmed-appointments/:appointmentId",
+  requireSignIn,
+  userMiddleware,
+  updateConfirmedAppointments
 );
 
 router.get(

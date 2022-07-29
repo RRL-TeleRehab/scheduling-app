@@ -11,7 +11,9 @@ exports.read = (req, res, next) => {
     user.hashed_password = undefined;
     user.salt = undefined;
     user.resetPasswordLink = undefined;
-    user.meetingLink = undefined;
+    if (user.role !== "hub") {
+      user.meetingLink = undefined;
+    }
     return res.json(user);
   });
 };

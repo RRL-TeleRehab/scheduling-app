@@ -188,7 +188,7 @@ exports.createAppointmentRequest = asyncHandler(async (req, res, next) => {
 // @access Hub Clinician
 exports.updateAppointmentRequest = asyncHandler(async (req, res, next) => {
   if (req.body.status === "accepted") {
-    // @Case1: Appointment request accepted
+    // @Case1: Appointment request : accepted
     // when an appointment status is changed to accepted by Hub clinician,
     // a record update in requestedAppointment with status as 'Accepted'
     // a new record in requestedAppointmentHistory with status as 'Accepted'
@@ -536,5 +536,102 @@ exports.pendingRequestsByDate = asyncHandler(async (req, res, next) => {
     });
   } catch (error) {
     return res.status(400).json(error);
+  }
+});
+
+// @description : Update confirmed Appointments status to: completed, cancelled, modified
+// @route PUT /confirmed-appointments/:appointmentId
+// @access Hub & Spoke Clinician
+
+exports.updateConfirmedAppointments = asyncHandler(async (req, res, next) => {
+  let { status } = req.body;
+  let appointmentId = req.params.appointmentId;
+  if (status === "fulfilled") {
+    // update the appointment status to fulfilled
+    // create a new record into appointment history
+    // send email to patient and Spoke clinician about appointment completion
+    const appointmentUpdateInfo = await appointments
+      .findByIdAndUpdate(
+        appointmentId,
+        { status: req.body.status },
+        { new: true }
+      )
+      .populate([
+        {
+          path: "requestedBy",
+          model: "User",
+          select: "firstName lastName email clinicName",
+        },
+        {
+          path: "requestedTo",
+          model: "User",
+          select: "firstName lastName email clinicName",
+        },
+        {
+          path: "requestedFor",
+          model: "Patient",
+          select: "firstName lastName email",
+        },
+      ]);
+    if (!appointmentUpdateInfo) {
+      return next(
+        new ErrorResponse(`No appointment found with Id ${appointmentId}`, 404)
+      );
+    }
+    const updateAppointmentHistoryData = {
+      requestedBy: appointmentUpdateInfo.requestedBy._id,
+      requestedFor: appointmentUpdateInfo.requestedFor._id,
+      requestedTo: appointmentUpdateInfo.requestedTo._id,
+      appointmentDate: appointmentUpdateInfo.appointmentDate,
+      appointmentTime: appointmentUpdateInfo.appointmentTime,
+      status: appointmentUpdateInfo.status,
+    };
+    const updateAppointmentHistory = await appointmentsHistory.create(
+      updateAppointmentHistoryData
+    );
+    // send email for appointment completion
+    let emailData = {
+      from: process.env.EMAIL_FROM,
+      to: [
+        appointmentUpdateInfo.requestedBy.email,
+        appointmentUpdateInfo.requestedFor.email,
+      ],
+      subject: `Thank you for choosing PROMOTE. Appointment completed`,
+      html: `
+          <p>Your appointment :  ${appointmentUpdateInfo._id}
+          on ${appointmentUpdateInfo.appointmentDate} at ${appointmentUpdateInfo.appointmentTime}
+          has been completed. I hope you had a great experience. Please visit us again</p>
+          <p>${process.env.CLIENT_URL}/</p>
+          `,
+    };
+    sendEmailWithNodemailer(req, res, emailData);
+    res.status(200).json({
+      success: true,
+      message: "Appointment status updated",
+    });
+  }
+  if (status === "modified") {
+    // update old availability of the Hub clinician if time and date is valid
+    // block new availability of the Hub clinician with new date and time slot
+    // update the old appointment request status to rejected
+    // Add a new record in appointment request history with status as rejected
+    // send a new appointment request to the hub clinician with new appointment date and time with status as pending
+    // Add a new record in appointment request history with status as pending
+    // send email to patient and Spoke clinician about appointment modification with new data and time
+    // remove the confirmed appointment from the appointments collection
+    // add new record in appointmentHistory with status as modified.
+    // Send email to the patient, Spoke and Hub clinician about the new appointment request details
+  }
+
+  // update old availability of the Hub clinician if time and date is valid
+  // block new availability of the Hub clinician with new date and time slot
+  // update the old appointment request status to pending with new time and date
+  // Add a new record in appointment request history with new appointment date, time and status as pending
+  // send email to patient and Spoke clinician about appointment modification with new appointment data and time
+  // remove the confirmed appointment from the appointments collection
+  // add new record in appointmentHistory with status as modified.
+  // Send email to the patient, Spoke and Hub clinician about the new appointment request details
+
+  if (status === "cancelled") {
   }
 });
