@@ -11,6 +11,7 @@ const {
   getConfirmedAppointments,
   updateConfirmedAppointments,
   pendingRequestsByDate,
+  getConfirmedAppointmentsByDateForClinician,
 } = require("../controllers/appointments");
 
 // import middleware
@@ -78,6 +79,13 @@ router.put(
   requireSignIn,
   hubClinicianMiddleware,
   updateAppointmentRequest
+);
+
+router.get(
+  "/confirmed-appointments/:availabilityDate",
+  requireSignIn,
+  userMiddleware,
+  getConfirmedAppointmentsByDateForClinician
 );
 
 module.exports = router;

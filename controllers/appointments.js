@@ -10,6 +10,7 @@ const { sendEmailWithNodemailer } = require("../helpers/email");
 const Patient = require("../models/patient");
 const Availability = require("../models/availability");
 const User = require("../models/user");
+const cron = require("node-cron");
 
 // @description :  Get Appointments of a clinician - pending, rejected or accepted
 // @route GET /api/request-appointment
@@ -635,3 +636,160 @@ exports.updateConfirmedAppointments = asyncHandler(async (req, res, next) => {
   if (status === "cancelled") {
   }
 });
+
+exports.getConfirmedAppointmentsByDateForClinician = asyncHandler(
+  async (req, res, next) => {
+    const userId = req.user._id;
+    const availabilityDate = req.params.availabilityDate;
+    const { role } = await User.findById(req.user._id);
+    let query;
+    if (role === "hub") {
+      query = {
+        requestedTo: userId,
+        appointmentDate: new Date(availabilityDate),
+        status: { $in: ["active", "fulfilled"] },
+      };
+    }
+    if (role === "spoke") {
+      query = {
+        requestedBy: userId,
+        appointmentDate: new Date(availabilityDate),
+        status: { $in: ["active", "fulfilled"] },
+      };
+    }
+    const confirmedAppointments = await appointments.find(query);
+    if (!confirmedAppointments) {
+      return next(
+        new ErrorResponse(
+          `No confirmed appointments found on ${availabilityDate}`,
+          404
+        )
+      );
+    }
+    res.status(200).json({
+      success: true,
+      count: confirmedAppointments.length,
+      confirmedAppointments: confirmedAppointments,
+    });
+  }
+);
+
+// cron job to update the pending requests of the previous day to rejected
+const updatePendingRequestsToRejected = asyncHandler(async () => {
+  const pendingRequests = await requestedAppointment.find({
+    status: "pending",
+  });
+  if (pendingRequests) {
+    // rejecting the pending requests
+    pendingRequests.forEach((pendingRequest) => {
+      const appointmentDate = new Date(pendingRequest.appointmentDate);
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0);
+      if (appointmentDate < currentDate) {
+        requestedAppointment
+          .findByIdAndUpdate(pendingRequest._id, {
+            status: "rejected",
+          })
+          .then((updatedRequest) => {
+            console.log(updatedRequest);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+
+        // send an email about the expired pending request and ask them to requests again
+        // pending work
+      }
+    });
+  } else {
+    console.log("No pending requests found");
+  }
+});
+cron.schedule("* 0 0 * * *", updatePendingRequestsToRejected);
+
+// update the Hub clinician availability for every 30 min as slot gets expired
+
+// 1) update the expired time slots to false
+// 2) reject the pending requests present for this slot and send an email to rebook again
+const updateHubClinicianAvailability = asyncHandler(async () => {
+  var today = new Date();
+  let minutes = today.getMinutes();
+  let hours = today.getHours();
+  var dd = String(today.getDate()).padStart(2, "0");
+  var mm = String(today.getMonth() + 1).padStart(2, "0");
+  var yyyy = today.getFullYear();
+  today = mm + "/" + dd + "/" + yyyy;
+  minutes = minutes <= 9 ? "0" + minutes : minutes;
+  hours = hours <= 9 ? "0" + hours : hours;
+
+  var currentTime = hours + ":" + minutes;
+
+  // get all hub clinicians
+  const getAllHubClinicians = await User.find({
+    role: "hub",
+  }).select("_id");
+
+  if (getAllHubClinicians) {
+    getAllHubClinicians.forEach(async (hubClinician) => {
+      const getClinicianAvailability = await Availability.aggregate([
+        {
+          $match: {
+            clinicianId: hubClinician._id,
+          },
+        },
+        { $unwind: "$availability" },
+        {
+          $match: {
+            "availability.date": new Date(today),
+          },
+        },
+      ]);
+
+      if (getClinicianAvailability[0].availability.slots.length > 0) {
+        getClinicianAvailability[0].availability.slots.forEach(async (slot) => {
+          console.log(
+            "slot time",
+            slot.time,
+            "current time",
+            currentTime,
+            slot.time < currentTime
+          );
+          if (slot.time <= currentTime) {
+            const clinicianAvailabilitySlotUpdate =
+              await Availability.updateOne(
+                {
+                  clinicianId: hubClinician._id,
+                  availability: {
+                    $elemMatch: {
+                      date: new Date(today),
+                      "slots.time": slot.time,
+                    },
+                  },
+                },
+                {
+                  $set: {
+                    "availability.$[outer].slots.$[inner].isAvailable": false,
+                  },
+                },
+                {
+                  arrayFilters: [
+                    {
+                      "outer.date": new Date(today),
+                    },
+                    {
+                      "inner.time": slot.time,
+                    },
+                  ],
+                }
+              );
+          }
+        });
+      }
+    });
+  }
+});
+cron.schedule("1 */30 * * * *", updateHubClinicianAvailability);
+
+// run a cron job every 20 min and 30 min of the hour to send email to clinicians as a reminder about the appointment
+
+// * 20,50 * * * *
