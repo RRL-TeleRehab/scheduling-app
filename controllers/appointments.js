@@ -11,6 +11,34 @@ const Patient = require("../models/patient");
 const Availability = require("../models/availability");
 const User = require("../models/user");
 const cron = require("node-cron");
+const { createClient } = require("redis");
+const utils = require("util");
+const redisClient = createClient({
+  port: 6379,
+  legacyMode: true,
+});
+redisClient.connect().then(() => {});
+redisClient.set = utils.promisify(redisClient.set);
+
+const appointmentsFilter = [
+  {
+    path: "requestedBy",
+    model: "User",
+    select:
+      "firstName lastName email profilePhoto gender clinicContact clinicName",
+  },
+  {
+    path: "requestedTo",
+    model: "User",
+    select:
+      "firstName lastName email profilePhoto gender clinicContact clinicName",
+  },
+  {
+    path: "requestedFor",
+    model: "Patient",
+    select: "firstName lastName email",
+  },
+];
 
 // @description :  Get Appointments of a clinician - pending, rejected or accepted
 // @route GET /api/request-appointment
@@ -18,46 +46,54 @@ const cron = require("node-cron");
 
 exports.getAppointmentsRequested = asyncHandler(async (req, res, next) => {
   const userId = req.user._id;
-  const { role } = await User.findById(userId);
-  let query;
-  if (role === "hub") {
-    query = {
-      requestedTo: userId,
-      status: { $in: ["pending", "rejected"] },
-    };
-  } else {
-    query = {
-      requestedBy: userId,
-      status: { $in: ["pending", "rejected"] },
-    };
+  try {
+    const { role } = await User.findById(userId);
+    let query;
+    if (role === "hub") {
+      query = {
+        requestedTo: userId,
+        status: { $in: ["pending", "rejected"] },
+      };
+    } else {
+      query = {
+        requestedBy: userId,
+        status: { $in: ["pending", "rejected"] },
+      };
+    }
+    redisClient.get(
+      `requestedAppointments-${userId}`,
+      async (err, response) => {
+        if (response) {
+          console.log(
+            `Requested Appointments for ${userId} successfully retrieved from cache`
+          );
+          res.status(200).send({ appointments: JSON.parse(response) });
+        } else {
+          const appointments = await requestedAppointment
+            .find(query)
+            .sort({ appointmentDate: 1 })
+            .sort({ appointmentTime: 1 })
+            .populate(appointmentsFilter);
+          if (!appointments) {
+            return res.status(400).json({
+              message: "No appointment found",
+            });
+          }
+          redisClient.setex(
+            `requestedAppointments-${userId}`,
+            60,
+            JSON.stringify(appointments)
+          );
+          console.log(
+            "Requested Appointments successfully retrieved from the API"
+          );
+          res.status(200).json({ appointments });
+        }
+      }
+    );
+  } catch (error) {
+    res.status(500).send({ error: error.message });
   }
-  const appointments = await requestedAppointment
-    .find(query)
-    .sort({ appointmentDate: 1 })
-    .sort({ appointmentTime: 1 })
-    .populate([
-      {
-        path: "requestedBy",
-        model: "User",
-        select: "firstName lastName email profilePhoto",
-      },
-      {
-        path: "requestedTo",
-        model: "User",
-        select: "firstName lastName email profilePhoto",
-      },
-      {
-        path: "requestedFor",
-        model: "Patient",
-        select: "firstName lastName email",
-      },
-    ]);
-  if (!appointments) {
-    return res.status(400).json({
-      message: "No appointment found",
-    });
-  }
-  res.status(200).json({ appointments });
 });
 
 // @description :  Get requested Appointment details by appointmentId
@@ -67,25 +103,7 @@ exports.getRequestedAppointmentById = asyncHandler(async (req, res, next) => {
   const appointmentId = req.params.appointmentId;
   requestedAppointment
     .findById(appointmentId)
-    .populate([
-      {
-        path: "requestedBy",
-        model: "User",
-        select:
-          "firstName lastName email profilePhoto gender clinicContact clinicName",
-      },
-      {
-        path: "requestedTo",
-        model: "User",
-        select:
-          "firstName lastName email profilePhoto gender clinicContact clinicName",
-      },
-      {
-        path: "requestedFor",
-        model: "Patient",
-        select: "firstName lastName email",
-      },
-    ])
+    .populate(appointmentsFilter)
     .exec((err, appointmentInfo) => {
       if (err || !appointmentInfo) {
         return res.status(400).json({
@@ -104,25 +122,7 @@ exports.getConfirmedAppointmentById = asyncHandler(async (req, res, next) => {
   const appointmentId = req.params.appointmentId;
   appointments
     .findById(appointmentId)
-    .populate([
-      {
-        path: "requestedBy",
-        model: "User",
-        select:
-          "firstName lastName email profilePhoto gender clinicContact clinicName",
-      },
-      {
-        path: "requestedTo",
-        model: "User",
-        select:
-          "firstName lastName email profilePhoto gender clinicContact clinicName",
-      },
-      {
-        path: "requestedFor",
-        model: "Patient",
-        select: "firstName lastName email",
-      },
-    ])
+    .populate(appointmentsFilter)
     .exec((err, appointmentInfo) => {
       if (err || !appointmentInfo) {
         return res.status(400).json({
@@ -658,6 +658,7 @@ exports.getConfirmedAppointmentsByDateForClinician = asyncHandler(
       };
     }
     const confirmedAppointments = await appointments.find(query);
+    // client.set(`${userId}`, JSON.stringify(confirmedAppointments));
     if (!confirmedAppointments) {
       return next(
         new ErrorResponse(
