@@ -11,14 +11,7 @@ const Patient = require("../models/patient");
 const Availability = require("../models/availability");
 const User = require("../models/user");
 const cron = require("node-cron");
-const { createClient } = require("redis");
-const utils = require("util");
-const redisClient = createClient({
-  port: 6379,
-  legacyMode: true,
-});
-redisClient.connect().then(() => {});
-redisClient.set = utils.promisify(redisClient.set);
+const redisClient = require("../helpers/cacheManager");
 
 const appointmentsFilter = [
   {
@@ -81,7 +74,7 @@ exports.getAppointmentsRequested = asyncHandler(async (req, res, next) => {
           }
           redisClient.setex(
             `requestedAppointments-${userId}`,
-            60,
+            120,
             JSON.stringify(appointments)
           );
           console.log(

@@ -25,7 +25,6 @@ exports.createAvailability = asyncHandler(async (req, res, next) => {
   // 2) Check if there are any confirmed appointments and send email for rescheduling
 
   const { clinicianId, availability } = req.body;
-  console.log(availability[0]);
   try {
     const clinicianExists = await Availability.findOne({
       clinicianId: clinicianId,
@@ -93,7 +92,7 @@ exports.createAvailability = asyncHandler(async (req, res, next) => {
       let removedTimeSlots = currentAvailableSlots.filter(
         (slot) => !toBeUpdatedSlots.includes(slot)
       );
-      console.log("removedTimeSlots", removedTimeSlots);
+      // console.log("removedTimeSlots", removedTimeSlots);
 
       // Check pending appointments requested for the removed time slots and update appointment status to rejected or cancelled
       // Add the records to the history of the appointment requested
@@ -123,7 +122,7 @@ exports.createAvailability = asyncHandler(async (req, res, next) => {
             },
           ]);
 
-        console.log("pendingAppointmentRequests", pendingAppointmentRequests);
+        // console.log("pendingAppointmentRequests", pendingAppointmentRequests);
 
         if (pendingAppointmentRequests.length > 0) {
           // send email to the removed slots pending request Appointments
