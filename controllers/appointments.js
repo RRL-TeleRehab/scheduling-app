@@ -64,8 +64,8 @@ exports.getAppointmentsRequested = asyncHandler(async (req, res, next) => {
         } else {
           const appointments = await requestedAppointment
             .find(query)
-            .sort({ appointmentDate: 1 })
-            .sort({ appointmentTime: 1 })
+            .sort({ appointmentDate: "desc" })
+            .sort({ appointmentTime: "desc" })
             .populate(appointmentsFilter);
           if (!appointments) {
             return res.status(400).json({
@@ -651,7 +651,6 @@ exports.getConfirmedAppointmentsByDateForClinician = asyncHandler(
       };
     }
     const confirmedAppointments = await appointments.find(query);
-    // client.set(`${userId}`, JSON.stringify(confirmedAppointments));
     if (!confirmedAppointments) {
       return next(
         new ErrorResponse(
@@ -699,7 +698,8 @@ const updatePendingRequestsToRejected = asyncHandler(async () => {
     console.log("No pending requests found");
   }
 });
-cron.schedule("* 0 0 * * *", updatePendingRequestsToRejected);
+cron.schedule("* */30 * * * *", updatePendingRequestsToRejected);
+// cron.schedule("* 0 0 * * *", updatePendingRequestsToRejected); --> to run at midnight
 
 // update the Hub clinician availability for every 30 min as slot gets expired
 
