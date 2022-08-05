@@ -761,18 +761,124 @@ exports.updateConfirmedAppointments = asyncHandler(async (req, res, next) => {
           `,
     };
     sendEmailWithNodemailer(req, res, emailData);
+    res.status(200).json({
+      success: true,
+      message: "Appointment status updated",
+    });
   }
-
-  res.status(200).json({
-    success: true,
-    message: "Appointment status updated",
-  });
 
   if (status === "cancelled") {
     //  update appointment with status as cancelled
     //  update the availability of the Hub clinician if time and date is still valid
-    // Add a new record in appointment history with status as cancelled
-    // Send email to the patient, Spoke and Hub clinician about the appointment cancellation, and ask to request new appointment
+    //  Add a new record in appointment history with status as cancelled
+    //  Send email to the patient, Spoke and Hub clinician about the appointment cancellation, and ask to request new appointment
+
+    const {
+      appointmentDate,
+      appointmentTime,
+      requestedTo,
+      requestedBy,
+      requestedFor,
+    } = req.body;
+
+    const updateAppointmentStatus = await appointments
+      .findByIdAndUpdate(appointmentId, { status: "cancelled" }, { new: true })
+      .populate(appointmentsFilter);
+
+    console.log(updateAppointmentStatus);
+
+    // update the availability of the Hub clinician if time and date is still valid
+    // for future date
+    if (appointmentDate > today) {
+      const clinicianAvailabilityOldSlotUpdate = await Availability.updateOne(
+        {
+          clinicianId: requestedTo,
+          availability: {
+            $elemMatch: {
+              date: new Date(appointmentDate),
+              "slots.time": appointmentTime,
+            },
+          },
+        },
+        {
+          $set: {
+            "availability.$[outer].slots.$[inner].isAvailable": true,
+          },
+        },
+        {
+          arrayFilters: [
+            {
+              "outer.date": new Date(appointmentDate),
+            },
+            {
+              "inner.time": appointmentTime,
+            },
+          ],
+        }
+      );
+    }
+    // current date
+    if (appointmentDate === today) {
+      if (appointmentTime > currentTime) {
+        const clinicianAvailabilityOldSlotUpdate = await Availability.updateOne(
+          {
+            clinicianId: requestedTo,
+            availability: {
+              $elemMatch: {
+                date: new Date(appointmentDate),
+                "slots.time": appointmentTime,
+              },
+            },
+          },
+          {
+            $set: {
+              "availability.$[outer].slots.$[inner].isAvailable": true,
+            },
+          },
+          {
+            arrayFilters: [
+              {
+                "outer.date": new Date(appointmentDate),
+              },
+              {
+                "inner.time": appointmentTime,
+              },
+            ],
+          }
+        );
+      }
+    }
+
+    //  Add a new record in appointment history with status as cancelled
+    const updateAppointmentHistory = await appointmentsHistory.create({
+      requestedTo: requestedTo,
+      requestedBy: requestedBy,
+      requestedFor: requestedFor,
+      appointmentDate: appointmentDate,
+      appointmentTime: appointmentTime,
+      status: "cancelled",
+    });
+
+    // send email to patient and Spoke clinician about appointment cancellation
+    const emailList = [
+      updateAppointmentStatus.requestedBy.email,
+      updateAppointmentStatus.requestedFor.email,
+    ];
+
+    const emailData = {
+      from: process.env.EMAIL_FROM,
+      to: emailList,
+      subject: `Thank you for choosing PROMOTE. Appointment cancelled`,
+      html: `<p>Your appointment :  ${appointmentId} on ${appointmentDate} at ${appointmentTime} has been cancelled. </p>
+      <p>This email may contain sensitive information</p>
+      </p>${process.env.CLIENT_URL}/</p>
+      `,
+    };
+    sendEmailWithNodemailer(req, res, emailData);
+    res.status(200).json({
+      success: true,
+      message: "Appointment status updated",
+    });
   }
 });
 
