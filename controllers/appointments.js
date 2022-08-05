@@ -74,7 +74,7 @@ exports.getAppointmentsRequested = asyncHandler(async (req, res, next) => {
           }
           redisClient.setex(
             `requestedAppointments-${userId}`,
-            120,
+            10,
             JSON.stringify(appointments)
           );
           console.log(
@@ -606,27 +606,173 @@ exports.updateConfirmedAppointments = asyncHandler(async (req, res, next) => {
   }
   if (status === "modified") {
     // update old availability of the Hub clinician if time and date is valid
-    // block new availability of the Hub clinician with new date and time slot
-    // update the old appointment request status to rejected
-    // Add a new record in appointment request history with status as rejected
-    // send a new appointment request to the hub clinician with new appointment date and time with status as pending
-    // Add a new record in appointment request history with status as pending
-    // send email to patient and Spoke clinician about appointment modification with new data and time
+    // update the old appointment request status to pending with new time and date
+    // Add a new record in request appointment history with new appointment date, time and status as pending
     // remove the confirmed appointment from the appointments collection
     // add new record in appointmentHistory with status as modified.
     // Send email to the patient, Spoke and Hub clinician about the new appointment request details
+
+    const {
+      appointmentDate,
+      appointmentTime,
+      selectedTimeSlot,
+      newAppointmentRequestDate,
+      requestedTo,
+      requestedBy,
+      requestedFor,
+    } = req.body;
+
+    var today = new Date();
+    var dd = String(today.getDate()).padStart(2, "0");
+    var mm = String(today.getMonth() + 1).padStart(2, "0");
+    var yyyy = today.getFullYear();
+    let minutes = today.getMinutes();
+    let hours = today.getHours();
+    today = mm + "-" + dd + "-" + yyyy;
+    minutes = minutes <= 9 ? "0" + minutes : minutes;
+    hours = hours <= 9 ? "0" + hours : hours;
+    var currentTime = hours + ":" + minutes;
+
+    // update the old availability of the Hub clinician if time and date is valid
+
+    // for future date
+    if (appointmentDate > today) {
+      const clinicianAvailabilityOldSlotUpdate = await Availability.updateOne(
+        {
+          clinicianId: requestedTo,
+          availability: {
+            $elemMatch: {
+              date: new Date(appointmentDate),
+              "slots.time": appointmentTime,
+            },
+          },
+        },
+        {
+          $set: {
+            "availability.$[outer].slots.$[inner].isAvailable": true,
+          },
+        },
+        {
+          arrayFilters: [
+            {
+              "outer.date": new Date(appointmentDate),
+            },
+            {
+              "inner.time": appointmentTime,
+            },
+          ],
+        }
+      );
+    }
+    // current date
+    if (appointmentDate === today) {
+      if (appointmentTime > currentTime) {
+        const clinicianAvailabilityOldSlotUpdate = await Availability.updateOne(
+          {
+            clinicianId: requestedTo,
+            availability: {
+              $elemMatch: {
+                date: new Date(appointmentDate),
+                "slots.time": appointmentTime,
+              },
+            },
+          },
+          {
+            $set: {
+              "availability.$[outer].slots.$[inner].isAvailable": true,
+            },
+          },
+          {
+            arrayFilters: [
+              {
+                "outer.date": new Date(appointmentDate),
+              },
+              {
+                "inner.time": appointmentTime,
+              },
+            ],
+          }
+        );
+      }
+    }
+
+    // update the old appointment request status to pending with new time and date
+    const updateRequestAppointment = await requestedAppointment
+      .findOneAndUpdate(
+        {
+          requestedTo: requestedTo,
+          requestedBy: requestedBy,
+          requestedFor: requestedFor,
+          appointmentDate: appointmentDate,
+          appointmentTime: appointmentTime,
+          status: "accepted",
+        },
+        {
+          status: "pending",
+          appointmentDate: newAppointmentRequestDate,
+          appointmentTime: selectedTimeSlot,
+        },
+        { new: true }
+      )
+      .populate(appointmentsFilter);
+
+    // Add a new record in appointment request history with new appointment date, time and status as pending
+
+    const updateRequestAppointmentHistory =
+      await requestedAppointmentHistory.create({
+        requestedTo: requestedTo,
+        requestedBy: requestedBy,
+        requestedFor: requestedFor,
+        appointmentDate: newAppointmentRequestDate,
+        appointmentTime: selectedTimeSlot,
+        status: "pending",
+      });
+
+    // remove the confirmed appointment from the appointments collection
+    const removeConfirmedAppointment = await appointments.findByIdAndRemove(
+      appointmentId
+    );
+
+    //add new record in appointmentHistory with status as modified.
+    const updateAppointmentHistory = await appointmentsHistory.create({
+      requestedTo: requestedTo,
+      requestedBy: requestedBy,
+      requestedFor: requestedFor,
+      appointmentDate: appointmentDate,
+      appointmentTime: appointmentTime,
+      status: "modified",
+    });
+
+    const emailList = [
+      updateRequestAppointment.requestedBy.email,
+      updateRequestAppointment.requestedFor.email,
+    ];
+
+    // send email to patient and Spoke clinician about appointment modification with new data and appointment time
+    const emailData = {
+      from: process.env.EMAIL_FROM,
+      to: emailList,
+      subject: `Thank you for choosing PROMOTE. Appointment rescheduled`,
+      html: `
+          <p>Your appointment :  ${appointmentId} on ${appointmentDate} at ${appointmentTime} has been rescheduled. </p>
+          <p>New request submitted on ${newAppointmentRequestDate} at ${selectedTimeSlot}</p>
+          <p>This email may contain sensitive information</p>
+          <p>${process.env.CLIENT_URL}/</p>
+          `,
+    };
+    sendEmailWithNodemailer(req, res, emailData);
   }
 
-  // update old availability of the Hub clinician if time and date is valid
-  // block new availability of the Hub clinician with new date and time slot
-  // update the old appointment request status to pending with new time and date
-  // Add a new record in appointment request history with new appointment date, time and status as pending
-  // send email to patient and Spoke clinician about appointment modification with new appointment data and time
-  // remove the confirmed appointment from the appointments collection
-  // add new record in appointmentHistory with status as modified.
-  // Send email to the patient, Spoke and Hub clinician about the new appointment request details
+  res.status(200).json({
+    success: true,
+    message: "Appointment status updated",
+  });
 
   if (status === "cancelled") {
+    //  update appointment with status as cancelled
+    //  update the availability of the Hub clinician if time and date is still valid
+    // Add a new record in appointment history with status as cancelled
+    // Send email to the patient, Spoke and Hub clinician about the appointment cancellation, and ask to request new appointment
   }
 });
 

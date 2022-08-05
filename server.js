@@ -5,6 +5,9 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const helmet = require("helmet");
 const winston = require("./helpers/logger");
+const rateLimit = require("express-rate-limit");
+const xss = require("xss-clean");
+const mongoSanitize = require("express-mongo-sanitize");
 require("dotenv").config();
 
 const app = express();
@@ -27,6 +30,15 @@ const appointmentsRoutes = require("./routes/appointments");
 // It shows the real origin IP in the heroku or Cloudwatch logs
 app.enable("trust proxy");
 
+// rate limiter
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: "Too many requests from this IP, please try again after 15 minutes",
+});
+
 // app middleware
 app.use(morgan("combined", { stream: winston.stream }));
 app.use(
@@ -45,6 +57,12 @@ app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+// Data sanitization against NoSQL query injection
+app.use(mongoSanitize());
+
+// Data sanitization against XSS
+app.use(xss());
+
 if (process.env.NODE_ENV === "development") {
   app.use(
     cors({
@@ -54,11 +72,11 @@ if (process.env.NODE_ENV === "development") {
 }
 
 // middleware
-app.use("/api", authRoutes);
-app.use("/api", userRoutes);
-app.use("/api", storyRoutes);
-app.use("/api", availabilityRoutes);
-app.use("/api", appointmentsRoutes);
+app.use("/api", limiter, authRoutes);
+app.use("/api", limiter, userRoutes);
+app.use("/api", limiter, storyRoutes);
+app.use("/api", limiter, availabilityRoutes);
+app.use("/api", limiter, appointmentsRoutes);
 
 const port = process.env.PORT || 8000;
 app.listen(port, () => {
