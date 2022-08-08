@@ -19,7 +19,7 @@ const {
 
 exports.createAvailability = asyncHandler(async (req, res, next) => {
   // Use cases:
-  // 1) iF availability is updated or deleted  - if a time slot is updated or deleted an email should be sent to Spoke clinicians and patients
+  // 1) If availability is updated or deleted  - if a time slot is updated or deleted an email should be sent to Spoke clinicians and patients
   //  whose have booked an appointment where the appointment is either in pending state or active appointment.
 
   // 2) Check if there are any confirmed appointments and send email for rescheduling
@@ -263,12 +263,40 @@ exports.createAvailability = asyncHandler(async (req, res, next) => {
         }
       }
 
+      // new time slots
+      let newSlots = [];
+      var currentDate = new Date();
+      let minutes = currentDate.getMinutes();
+      let hours = currentDate.getHours();
+      var dd = String(currentDate.getDate()).padStart(2, "0");
+      var mm = String(currentDate.getMonth() + 1).padStart(2, "0");
+      var yyyy = currentDate.getFullYear();
+      currentDate = mm + "-" + dd + "-" + yyyy;
+      minutes = minutes <= 9 ? "0" + minutes : minutes;
+      hours = hours <= 9 ? "0" + hours : hours;
+      var currentTime = hours + ":" + minutes;
+      let availabilityDate = availability[0].date;
+
+      if (availabilityDate === currentDate) {
+        availability[0].slots.map((slot) => {
+          if (currentTime > slot.time) {
+            newSlots.push({ time: slot.time, isAvailable: false });
+          } else {
+            newSlots.push({ time: slot.time, isAvailable: true });
+          }
+        });
+      } else {
+        availability[0].slots.map((slot) => {
+          newSlots.push({ time: slot.time, isAvailable: true });
+        });
+      }
+
       clinicianAvailability = await Availability.updateOne(
         {
           clinicianId: clinicianId,
           "availability.date": new Date(availability[0].date),
         },
-        { $set: { "availability.$.slots": availability[0].slots } }
+        { $set: { "availability.$.slots": newSlots } }
       );
     }
 
