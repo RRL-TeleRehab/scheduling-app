@@ -466,7 +466,9 @@ exports.updateAppointmentRequest = asyncHandler(async (req, res, next) => {
 // @access Hub Clinician and Spoke Clinician
 
 exports.getConfirmedAppointments = asyncHandler(async (req, res, next) => {
+  const PAGE_SIZE = 10;
   const userId = req.user._id;
+  const page = parseInt(req.query.page - 1 || "0");
   const { role } = await User.findById(req.user._id);
   let query;
   if (role === "hub") {
@@ -475,30 +477,37 @@ exports.getConfirmedAppointments = asyncHandler(async (req, res, next) => {
   if (role === "spoke") {
     query = { requestedBy: userId };
   }
-  const confirmedBookings = await appointments.find(query).populate([
-    {
-      path: "requestedBy",
-      model: "User",
-      select:
-        "firstName lastName email profilePhoto gender clinicContact clinicName",
-    },
-    {
-      path: "requestedTo",
-      model: "User",
-      select:
-        "firstName lastName email profilePhoto gender clinicContact clinicName",
-    },
-    {
-      path: "requestedFor",
-      model: "Patient",
-      select: "firstName lastName email",
-    },
-  ]);
+  const total = await appointments.countDocuments(query);
+  const confirmedBookings = await appointments
+    .find(query)
+    .limit(PAGE_SIZE)
+    .skip(page * PAGE_SIZE)
+    .populate([
+      {
+        path: "requestedBy",
+        model: "User",
+        select:
+          "firstName lastName email profilePhoto gender clinicContact clinicName",
+      },
+      {
+        path: "requestedTo",
+        model: "User",
+        select:
+          "firstName lastName email profilePhoto gender clinicContact clinicName",
+      },
+      {
+        path: "requestedFor",
+        model: "Patient",
+        select: "firstName lastName email",
+      },
+    ]);
   if (!confirmedBookings)
     return res.status(404).json({
       message: "No bookings found",
     });
-  res.status(200).json({ confirmedBookings });
+  res
+    .status(200)
+    .json({ confirmedBookings, totalPages: Math.ceil(total / PAGE_SIZE) });
 });
 
 // @description :  Get pending appointment requests by Date
