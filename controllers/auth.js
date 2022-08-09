@@ -81,7 +81,7 @@ exports.accountActivation = (req, res, next) => {
         // if token is correct and verifies, save the user record in the database
         user.save((err, user) => {
           if (err) {
-            console.log("SAVE USER IN ACCOUNT ACTIVATION ERROR", err);
+            console.log("Save user in account activation error", err);
             return res.status(401).json({
               error: "Error saving user in database. Signup again",
             });

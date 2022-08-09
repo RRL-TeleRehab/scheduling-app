@@ -38,6 +38,8 @@ const appointmentsFilter = [
 // @access Hub Clinician
 
 exports.getAppointmentsRequested = asyncHandler(async (req, res, next) => {
+  const PAGE_SIZE = 10;
+  const page = parseInt(req.query.page - 1 || "0");
   const userId = req.user._id;
   try {
     const { role } = await User.findById(userId);
@@ -53,37 +55,59 @@ exports.getAppointmentsRequested = asyncHandler(async (req, res, next) => {
         status: { $in: ["pending", "rejected"] },
       };
     }
-    redisClient.get(
-      `requestedAppointments-${userId}`,
-      async (err, response) => {
-        if (response) {
-          console.log(
-            `Requested Appointments for ${userId} successfully retrieved from cache`
-          );
-          res.status(200).send({ appointments: JSON.parse(response) });
-        } else {
-          const appointments = await requestedAppointment
-            .find(query)
-            .sort({ appointmentDate: "desc" })
-            .sort({ appointmentTime: "desc" })
-            .populate(appointmentsFilter);
-          if (!appointments) {
-            return res.status(400).json({
-              message: "No appointment found",
-            });
-          }
-          redisClient.setex(
-            `requestedAppointments-${userId}`,
-            10,
-            JSON.stringify(appointments)
-          );
-          console.log(
-            "Requested Appointments successfully retrieved from the API"
-          );
-          res.status(200).json({ appointments });
-        }
-      }
-    );
+    const total = await requestedAppointment.countDocuments(query);
+    const appointments = await requestedAppointment
+      .find(query)
+      .sort({ appointmentDate: "desc" })
+      .sort({ appointmentTime: "desc" })
+      .limit(PAGE_SIZE)
+      .skip(page * PAGE_SIZE)
+      .populate(appointmentsFilter);
+    if (!appointments) {
+      return res.status(400).json({
+        message: "No appointment requests found",
+      });
+    }
+    res
+      .status(200)
+      .json({ appointments, totalPages: Math.ceil(total / PAGE_SIZE) });
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
+// @description :  Confirmed appointments of HUB Clinician
+// @route GET /hub/bookings
+// @access Hub Clinician and Spoke Clinician
+
+exports.getConfirmedAppointments = asyncHandler(async (req, res, next) => {
+  const PAGE_SIZE = 10;
+  const page = parseInt(req.query.page - 1 || "0");
+  const userId = req.user._id;
+  try {
+    const { role } = await User.findById(req.user._id);
+    let query;
+    if (role === "hub") {
+      query = { requestedTo: userId };
+    }
+    if (role === "spoke") {
+      query = { requestedBy: userId };
+    }
+    const total = await appointments.countDocuments(query);
+    const confirmedBookings = await appointments
+      .find(query)
+      .sort({ appointmentDate: "desc" })
+      .sort({ appointmentTime: "desc" })
+      .limit(PAGE_SIZE)
+      .skip(page * PAGE_SIZE)
+      .populate(appointmentsFilter);
+    if (!confirmedBookings)
+      return res.status(404).json({
+        message: "No bookings found",
+      });
+    res
+      .status(200)
+      .json({ confirmedBookings, totalPages: Math.ceil(total / PAGE_SIZE) });
   } catch (error) {
     res.status(500).send({ error: error.message });
   }
@@ -461,55 +485,6 @@ exports.updateAppointmentRequest = asyncHandler(async (req, res, next) => {
   }
 });
 
-// @description :  Confirmed appointments of HUB Clinician
-// @route GET /hub/bookings
-// @access Hub Clinician and Spoke Clinician
-
-exports.getConfirmedAppointments = asyncHandler(async (req, res, next) => {
-  const PAGE_SIZE = 10;
-  const userId = req.user._id;
-  const page = parseInt(req.query.page - 1 || "0");
-  const { role } = await User.findById(req.user._id);
-  let query;
-  if (role === "hub") {
-    query = { requestedTo: userId };
-  }
-  if (role === "spoke") {
-    query = { requestedBy: userId };
-  }
-  const total = await appointments.countDocuments(query);
-  const confirmedBookings = await appointments
-    .find(query)
-    .limit(PAGE_SIZE)
-    .skip(page * PAGE_SIZE)
-    .populate([
-      {
-        path: "requestedBy",
-        model: "User",
-        select:
-          "firstName lastName email profilePhoto gender clinicContact clinicName",
-      },
-      {
-        path: "requestedTo",
-        model: "User",
-        select:
-          "firstName lastName email profilePhoto gender clinicContact clinicName",
-      },
-      {
-        path: "requestedFor",
-        model: "Patient",
-        select: "firstName lastName email",
-      },
-    ]);
-  if (!confirmedBookings)
-    return res.status(404).json({
-      message: "No bookings found",
-    });
-  res
-    .status(200)
-    .json({ confirmedBookings, totalPages: Math.ceil(total / PAGE_SIZE) });
-});
-
 // @description :  Get pending appointment requests by Date
 // @route GET /pending-requests/:clinicianId/:availabilityDate
 // @access Hub Clinician
@@ -549,6 +524,7 @@ exports.pendingRequestsByDate = asyncHandler(async (req, res, next) => {
 exports.updateConfirmedAppointments = asyncHandler(async (req, res, next) => {
   let { status } = req.body;
   let appointmentId = req.params.appointmentId;
+
   if (status === "fulfilled") {
     // update the appointment status to fulfilled
     // create a new record into appointment history
@@ -643,7 +619,6 @@ exports.updateConfirmedAppointments = asyncHandler(async (req, res, next) => {
     var currentTime = hours + ":" + minutes;
 
     // update the old availability of the Hub clinician if time and date is valid
-
     // for future date
     if (appointmentDate > today) {
       const clinicianAvailabilityOldSlotUpdate = await Availability.updateOne(
@@ -782,6 +757,17 @@ exports.updateConfirmedAppointments = asyncHandler(async (req, res, next) => {
     //  Add a new record in appointment history with status as cancelled
     //  Send email to the patient, Spoke and Hub clinician about the appointment cancellation, and ask to request new appointment
 
+    var today = new Date();
+    var dd = String(today.getDate()).padStart(2, "0");
+    var mm = String(today.getMonth() + 1).padStart(2, "0");
+    var yyyy = today.getFullYear();
+    let minutes = today.getMinutes();
+    let hours = today.getHours();
+    today = mm + "-" + dd + "-" + yyyy;
+    minutes = minutes <= 9 ? "0" + minutes : minutes;
+    hours = hours <= 9 ? "0" + hours : hours;
+    var currentTime = hours + ":" + minutes;
+
     const {
       appointmentDate,
       appointmentTime,
@@ -790,15 +776,21 @@ exports.updateConfirmedAppointments = asyncHandler(async (req, res, next) => {
       requestedFor,
     } = req.body;
 
+    console.log(req.body);
+
     const updateAppointmentStatus = await appointments
       .findByIdAndUpdate(appointmentId, { status: "cancelled" }, { new: true })
       .populate(appointmentsFilter);
 
-    console.log(updateAppointmentStatus);
+    console.log("updateAppointmentStatus", updateAppointmentStatus);
 
     // update the availability of the Hub clinician if time and date is still valid
     // for future date
     if (appointmentDate > today) {
+      console.log(
+        "updateAppointmentStatus valid time slot",
+        appointmentDate > today
+      );
       const clinicianAvailabilityOldSlotUpdate = await Availability.updateOne(
         {
           clinicianId: requestedTo,
@@ -828,7 +820,15 @@ exports.updateConfirmedAppointments = asyncHandler(async (req, res, next) => {
     }
     // current date
     if (appointmentDate === today) {
+      console.log(
+        "updateAppointmentStatus valid equal time slot",
+        appointmentDate === today
+      );
       if (appointmentTime > currentTime) {
+        console.log(
+          "updateAppointmentStatus valid time slot",
+          appointmentTime > currentTime
+        );
         const clinicianAvailabilityOldSlotUpdate = await Availability.updateOne(
           {
             clinicianId: requestedTo,
