@@ -12,6 +12,8 @@ const {
   updateConfirmedAppointments,
   pendingRequestsByDate,
   getConfirmedAppointmentsByDateForClinician,
+  getAllAppointmentRequests,
+  getAllAppointments,
 } = require("../controllers/appointments");
 
 // import middleware
@@ -20,6 +22,7 @@ const {
   spokeClinicianMiddleware,
   userMiddleware,
   hubClinicianMiddleware,
+  adminMiddleware,
 } = require("../controllers/auth");
 
 // import validators
@@ -86,6 +89,20 @@ router.get(
   requireSignIn,
   userMiddleware,
   getConfirmedAppointmentsByDateForClinician
+);
+
+router.get(
+  "/all-appointments",
+  requireSignIn,
+  adminMiddleware,
+  getAllAppointments
+);
+
+router.get(
+  "/all-requests",
+  requireSignIn,
+  adminMiddleware,
+  getAllAppointmentRequests
 );
 
 module.exports = router;

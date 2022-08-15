@@ -113,6 +113,62 @@ exports.getConfirmedAppointments = asyncHandler(async (req, res, next) => {
   }
 });
 
+// description :  Get all appointments of all clinicians
+// route GET /api/all-appointments
+// access Admin
+
+exports.getAllAppointments = asyncHandler(async (req, res, next) => {
+  const PAGE_SIZE = 10;
+  const page = parseInt(req.query.page - 1 || "0");
+  try {
+    const total = await appointments.countDocuments();
+    const confirmedBookings = await appointments
+      .find()
+      .sort({ appointmentDate: "desc" })
+      .sort({ appointmentTime: "desc" })
+      .limit(PAGE_SIZE)
+      .skip(page * PAGE_SIZE)
+      .populate(appointmentsFilter);
+    if (!confirmedBookings)
+      return res.status(404).json({
+        message: "No bookings found",
+      });
+    res
+      .status(200)
+      .json({ confirmedBookings, totalPages: Math.ceil(total / PAGE_SIZE) });
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
+// description :  Get all appointments requests to all clinicians
+// route GET /api/all-requests
+// access Admin
+
+exports.getAllAppointmentRequests = asyncHandler(async (req, res, next) => {
+  const PAGE_SIZE = 10;
+  const page = parseInt(req.query.page - 1 || "0");
+  try {
+    const total = await requestedAppointment.countDocuments();
+    const appointmentRequests = await requestedAppointment
+      .find()
+      .sort({ appointmentDate: "desc" })
+      .sort({ appointmentTime: "desc" })
+      .limit(PAGE_SIZE)
+      .skip(page * PAGE_SIZE)
+      .populate(appointmentsFilter);
+    if (!appointmentRequests)
+      return res.status(404).json({
+        message: "No bookings found",
+      });
+    res
+      .status(200)
+      .json({ appointmentRequests, totalPages: Math.ceil(total / PAGE_SIZE) });
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
 // @description :  Get requested Appointment details by appointmentId
 // @route GET /api/request-appointment/:appointmentId
 // @access Hub and Spoke Clinician
