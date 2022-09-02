@@ -51,7 +51,7 @@ const userSchema = new mongoose.Schema(
     profilePhoto: {
       type: String,
       default:
-        "https://firebasestorage.googleapis.com/v0/b/promote-b3a12.appspot.com/o/userAvatar%2FdefaultAvatar.svg?alt=media&token=57a9ef20-56c2-488c-9e05-3755f6206ec5",
+        "https://firebasestorage.googleapis.com/v0/b/promote-b3a12.appspot.com/o/userAvatar%2Fperson_FILL0_wght400_GRAD0_opsz48.svg?alt=media&token=e4a21d08-566d-4a00-8b9e-b0a701e4c1c2",
       trim: true,
     },
     hashed_password: {
